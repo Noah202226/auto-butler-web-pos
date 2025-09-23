@@ -13,13 +13,16 @@ import {
   Receipt,
 } from "lucide-react";
 import Sidebar from "./Sidebar";
-import Clock from "./Clock";
+
 import { useUIStore } from "../stores/useUIStore";
+import { useAuthStore } from "../stores/authStore";
 import Dashboard from "./Dashboard";
 
 export default function Layout() {
   const { activeTab, openSidebar } = useUIStore();
   const [fabOpen, setFabOpen] = useState(false);
+
+  const { logout } = useAuthStore();
 
   const [dateTime, setDateTime] = useState(new Date());
 
@@ -93,9 +96,7 @@ export default function Layout() {
                 className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-40 mt-2"
               >
                 <li>
-                  <button onClick={() => console.log("Logout clicked!")}>
-                    Logout
-                  </button>
+                  <button onClick={() => logout()}>Logout</button>
                 </li>
               </ul>
             </div>
@@ -103,9 +104,9 @@ export default function Layout() {
         </header>
 
         {/* Main Page */}
-        <main className="flex flex-col h-screen flex-1 overflow-y-auto p-2 ">
+        <main className="flex flex-col h-screen flex-1 overflow-y-auto p-2 w-full">
           {activeTab === "dashboard" && (
-            <div className="font-semibold flex items-center">
+            <div className="font-semibold">
               <Dashboard />
             </div>
           )}

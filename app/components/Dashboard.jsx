@@ -112,7 +112,7 @@ export default function POSBays() {
       <h1 className="text-xl font-bold">POS Bay System</h1>
 
       {/* 🔹 Summary Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
         <div className="p-4 rounded-xl bg-blue-100 text-blue-800 shadow">
           <p className="text-sm opacity-80">Total Transactions</p>
           <p className="text-2xl font-bold">{totalTransactions}</p>
@@ -120,6 +120,11 @@ export default function POSBays() {
         <div className="p-4 rounded-xl bg-green-100 text-green-800 shadow">
           <p className="text-sm opacity-80">Total Sales</p>
           <p className="text-2xl font-bold">₱{totalAmount}</p>
+        </div>
+
+        <div className="p-4 rounded-xl bg-yellow-100 text-yellow-800 shadow">
+          <p className="text-sm opacity-80">Available</p>
+          <p className="text-2xl font-bold">{totalReserved}</p>
         </div>
         <div className="p-4 rounded-xl bg-yellow-100 text-yellow-800 shadow">
           <p className="text-sm opacity-80">Reserved</p>
@@ -132,7 +137,7 @@ export default function POSBays() {
       </div>
 
       {/* 🔹 Grid of Bays */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full mt-25">
         {bays.map((bay) => (
           <button
             key={bay.id}
