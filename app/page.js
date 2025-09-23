@@ -6,6 +6,7 @@ import { useAuthStore } from "./stores/authStore";
 import Dashboard from "./components/Dashboard";
 
 import { motion } from "framer-motion";
+import MainBoard from "./components/MainBoard";
 
 export default function HomePage() {
   const { getCurrentUser, current, loading } = useAuthStore((state) => state);
@@ -29,11 +30,11 @@ export default function HomePage() {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.8, ease: "easeInOut" }}
-        className="fixed inset-0 flex flex-col items-center justify-center bg-gradient-to-b from-black via-gray-900 to-black text-yellow-400 space-y-6 z-50"
+        className="fixed inset-0 flex flex-col items-center justify-center bg-gradient-to-b from-purple-400 via-gray-900 to-black text-cyan-400 space-y-6 z-50"
       >
         {/* Logo */}
         <img
-          src="/auto-butler.jpg"
+          src="/auto-butler.png"
           alt="Auto Butler"
           className="w-32 h-32 object-contain animate-pulse drop-shadow-[0_0_20px_rgba(255,215,0,0.5)]"
         />
@@ -52,5 +53,5 @@ export default function HomePage() {
     );
   }
 
-  return <div>{current ? <Dashboard /> : <Hero />}</div>;
+  return <div>{current ? <MainBoard /> : <Hero />}</div>;
 }
