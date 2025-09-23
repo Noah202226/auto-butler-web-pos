@@ -112,7 +112,7 @@ export default function POSBays() {
       <h1 className="text-xl font-bold">POS Bay System</h1>
 
       {/* 🔹 Summary Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
         <div className="p-4 rounded-xl bg-blue-100 text-blue-800 shadow">
           <p className="text-sm opacity-80">Total Transactions</p>
           <p className="text-2xl font-bold">{totalTransactions}</p>

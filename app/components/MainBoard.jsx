@@ -103,9 +103,9 @@ export default function Layout() {
         </header>
 
         {/* Main Page */}
-        <main className="flex flex-col h-screen space-y-2 flex-1 overflow-y-auto p-2 ">
+        <main className="flex flex-col h-screen flex-1 overflow-y-auto p-2 ">
           {activeTab === "dashboard" && (
-            <div className="text-xl font-semibold flex items-center">
+            <div className="font-semibold flex items-center">
               <Dashboard />
             </div>
           )}
