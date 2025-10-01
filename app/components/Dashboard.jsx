@@ -1,11 +1,20 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useBayStore } from "../stores/useBayStore";
 import toast from "react-hot-toast";
 
 export default function POSBays() {
-  const { bays, startTransaction, finishTransaction, toggleReserve } =
-    useBayStore();
+  const {
+    bays,
+    fetchBays,
+    startTransaction,
+    finishTransaction,
+    toggleReserve,
+  } = useBayStore();
+
+  useEffect(() => {
+    fetchBays();
+  }, [fetchBays]);
 
   const [activeBay, setActiveBay] = useState(null);
   const [showForm, setShowForm] = useState(false);
@@ -16,6 +25,7 @@ export default function POSBays() {
     vehicle: "",
     plate: "",
     service: "",
+    employee: "",
   });
   const [amountReceived, setAmountReceived] = useState("");
   const [change, setChange] = useState(0);
@@ -25,7 +35,7 @@ export default function POSBays() {
   const totalReserved = bays.filter((b) => b.status === "reserved").length;
   const totalOccupied = bays.filter((b) => b.status === "occupied").length;
   const totalAvailable = bays.filter((b) => b.status === "available").length;
-  const totalTransactions = bays.filter((b) => b.customer).length;
+  const totalTransactions = bays.filter((b) => b.customerName).length;
   const totalAmount = totalTransactions * servicePrice;
 
   function handleOpen(bay) {
@@ -38,7 +48,13 @@ export default function POSBays() {
     setActiveBay(null);
     setShowForm(false);
     setShowTender(false);
-    setCustomerInfo({ name: "", vehicle: "", plate: "", service: "" });
+    setCustomerInfo({
+      name: "",
+      vehicle: "",
+      plate: "",
+      service: "",
+      employee: "",
+    });
     setAmountReceived("");
     setChange(0);
   }
@@ -47,56 +63,47 @@ export default function POSBays() {
     setShowForm(true);
   }
 
-  function saveCustomerInfo() {
-    startTransaction(activeBay.id, customerInfo);
-    toast.success(`✅ Transaction started for Bay ${activeBay.id}`, {
-      style: {
-        background: "#d1fae5", // green-100
-        color: "#065f46", // green-800
-        fontWeight: "600",
-      },
+  async function saveCustomerInfo() {
+    await startTransaction(activeBay.docId, {
+      name: customerInfo.name,
+      plateNumber: customerInfo.plate,
+      vehicle: customerInfo.vehicle,
+      service: customerInfo.service,
     });
-    setActiveBay(null);
-    setShowForm(false);
-    document.getElementById("posModal").close();
+
+    toast.success(`✅ Transaction started for Bay ${activeBay.bayName}`);
+    closeModal();
   }
 
   function handleFinishTransaction() {
     setShowTender(true);
   }
 
-  function confirmFinish() {
-    finishTransaction(activeBay.id);
-    toast.success(`💰 Transaction finished for Bay ${activeBay.id}`, {
-      style: {
-        background: "#dbeafe", // blue-100
-        color: "#1e3a8a", // blue-900
-        fontWeight: "600",
-      },
+  async function confirmFinish() {
+    const companyShare = servicePrice * 0.7;
+    const employeeShare = servicePrice * 0.3;
+
+    await finishTransaction(activeBay.docId, {
+      employeeId: customerInfo.employee,
+      employeeName: customerInfo.employee,
+      amountReceived: Number(amountReceived),
+      change: Number(change),
+      companyShare,
+      employeeShare,
+      paymentMethod: "cash", // you can extend this to select method
     });
+
+    toast.success(`💰 Transaction finished for Bay ${activeBay.bayName}`);
     closeModal();
   }
 
-  function handleReserve() {
-    toggleReserve(activeBay.id);
+  async function handleReserve() {
+    await toggleReserve(activeBay.docId);
+
     if (activeBay.status === "reserved") {
-      toast(`🔓 Bay ${activeBay.id} unreserved`, {
-        icon: "🔓",
-        style: {
-          background: "#fef3c7", // yellow-100
-          color: "#92400e", // yellow-900
-          fontWeight: "600",
-        },
-      });
+      toast(`🔓 Bay ${activeBay.bayName} unreserved`, { icon: "🔓" });
     } else {
-      toast(`⭐ Bay ${activeBay.id} reserved`, {
-        icon: "⭐",
-        style: {
-          background: "#fef3c7", // yellow-100
-          color: "#78350f", // yellow-900
-          fontWeight: "600",
-        },
-      });
+      toast(`⭐ Bay ${activeBay.bayName} reserved`, { icon: "⭐" });
     }
     closeModal();
   }
@@ -121,10 +128,9 @@ export default function POSBays() {
           <p className="text-sm opacity-80">Total Sales</p>
           <p className="text-2xl font-bold">₱{totalAmount}</p>
         </div>
-
         <div className="p-4 rounded-xl bg-yellow-100 text-yellow-800 shadow">
           <p className="text-sm opacity-80">Available</p>
-          <p className="text-2xl font-bold">{totalReserved}</p>
+          <p className="text-2xl font-bold">{totalAvailable}</p>
         </div>
         <div className="p-4 rounded-xl bg-yellow-100 text-yellow-800 shadow">
           <p className="text-sm opacity-80">Reserved</p>
@@ -140,7 +146,7 @@ export default function POSBays() {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full mt-25">
         {bays.map((bay) => (
           <button
-            key={bay.id}
+            key={bay.docId}
             onClick={() => handleOpen(bay)}
             className={`p-6 rounded-2xl shadow text-center cursor-pointer transition transform hover:scale-105 
               ${
@@ -151,9 +157,7 @@ export default function POSBays() {
                   : "bg-yellow-100 text-yellow-800"
               }`}
           >
-            <p className="text-lg font-bold">Bay {bay.id}</p>
-
-            {/* Status Badge */}
+            <p className="text-lg font-bold">{bay.bayName}</p>
             <span
               className={`mt-2 inline-block px-3 py-1 rounded-full text-sm font-medium 
                 ${
@@ -166,39 +170,23 @@ export default function POSBays() {
             >
               {bay.status.charAt(0).toUpperCase() + bay.status.slice(1)}
             </span>
-
-            {bay.customer && (
+            {bay.customerName && (
               <p className="mt-2 text-xs font-medium opacity-90 text-center">
-                {bay.customer.name} ({bay.customer.vehicle})
-                {bay.status.charAt(0).toUpperCase() + bay.status.slice(1)}
+                {bay.customerName} ({bay.customerPlateNumber})
               </p>
             )}
           </button>
         ))}
       </div>
 
-      {/* Modal */}
+      {/* 🔹 Modal */}
       <dialog id="posModal" className="modal">
         <div className="modal-box max-w-lg rounded-2xl shadow-xl">
           {activeBay && (
             <>
               {/* Header */}
               <div className="flex justify-between items-center mb-4">
-                <h2 className="font-bold text-lg">
-                  Bay {activeBay.id} –{" "}
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-semibold
-                ${
-                  activeBay.status === "available"
-                    ? "bg-green-100 text-green-700"
-                    : activeBay.status === "occupied"
-                    ? "bg-red-100 text-red-700"
-                    : "bg-yellow-100 text-yellow-700"
-                }`}
-                  >
-                    {activeBay.status.toUpperCase()}
-                  </span>
-                </h2>
+                <h2 className="font-bold text-lg">{activeBay.bayName}</h2>
                 <button onClick={closeModal} className="btn btn-sm btn-circle">
                   ✕
                 </button>
@@ -218,18 +206,6 @@ export default function POSBays() {
                   />
                   <input
                     type="text"
-                    placeholder="Vehicle Type"
-                    className="input input-bordered w-full"
-                    value={customerInfo.vehicle}
-                    onChange={(e) =>
-                      setCustomerInfo({
-                        ...customerInfo,
-                        vehicle: e.target.value,
-                      })
-                    }
-                  />
-                  <input
-                    type="text"
                     placeholder="Plate No."
                     className="input input-bordered w-full"
                     value={customerInfo.plate}
@@ -242,8 +218,18 @@ export default function POSBays() {
                   />
                   <input
                     type="text"
-                    placeholder="Service"
+                    placeholder="Vehicle"
                     className="input input-bordered w-full"
+                    value={customerInfo.vehicle}
+                    onChange={(e) =>
+                      setCustomerInfo({
+                        ...customerInfo,
+                        vehicle: e.target.value,
+                      })
+                    }
+                  />
+                  <select
+                    className="select select-bordered w-full"
                     value={customerInfo.service}
                     onChange={(e) =>
                       setCustomerInfo({
@@ -251,7 +237,18 @@ export default function POSBays() {
                         service: e.target.value,
                       })
                     }
-                  />
+                  >
+                    <option value="" disabled>
+                      -- Select Service --
+                    </option>
+                    <option value="Car Wash">Car Wash</option>
+                    <option value="Waxing">Waxing</option>
+                    <option value="Interior Detailing">
+                      Interior Detailing
+                    </option>
+                    <option value="Engine Wash">Engine Wash</option>
+                  </select>
+
                   <button
                     onClick={saveCustomerInfo}
                     className="btn btn-success w-full mt-2"
@@ -265,13 +262,9 @@ export default function POSBays() {
               {showTender && (
                 <div className="space-y-4">
                   <p className="font-semibold text-lg">
-                    Total:{" "}
-                    <span className="text-purple-600 font-bold">
-                      ₱{servicePrice}
-                    </span>
+                    Total: ₱{servicePrice}
                   </p>
 
-                  {/* Select Carwash Boy */}
                   <div>
                     <label className="block font-medium mb-1">
                       Assign Carwash Boy
@@ -295,7 +288,6 @@ export default function POSBays() {
                     </select>
                   </div>
 
-                  {/* Amount Input */}
                   <input
                     type="number"
                     placeholder="Amount Received"
@@ -304,35 +296,27 @@ export default function POSBays() {
                     onChange={handleAmountChange}
                   />
 
-                  {/* Change */}
                   <p className="font-semibold text-lg">
-                    Change:{" "}
+                    Change: ₱
                     <span
                       className={`font-bold ${
                         change < 0 ? "text-red-500" : "text-green-600"
                       }`}
                     >
-                      ₱{change}
+                      {change}
                     </span>
                   </p>
 
-                  {/* Company & Employee Share */}
                   <div className="p-3 rounded-lg bg-base-200">
-                    <p className="font-medium text-sm">
-                      Company Share (70%):{" "}
-                      <span className="font-bold text-blue-600">
-                        ₱{(servicePrice * 0.7).toFixed(2)}
-                      </span>
+                    <p>
+                      Company Share (70%): ₱{(servicePrice * 0.7).toFixed(2)}
                     </p>
-                    <p className="font-medium text-sm">
-                      {customerInfo.employee || "Employee"} Share (30%):{" "}
-                      <span className="font-bold text-emerald-600">
-                        ₱{(servicePrice * 0.3).toFixed(2)}
-                      </span>
+                    <p>
+                      {customerInfo.employee || "Employee"} Share (30%): ₱
+                      {(servicePrice * 0.3).toFixed(2)}
                     </p>
                   </div>
 
-                  {/* Confirm Button */}
                   <button
                     disabled={change < 0 || !customerInfo.employee}
                     onClick={confirmFinish}

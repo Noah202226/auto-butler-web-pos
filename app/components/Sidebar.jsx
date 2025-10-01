@@ -24,7 +24,7 @@ export default function Sidebar() {
           <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-primary text-primary-content font-bold">
             CW
           </div>
-          <span className="font-bold text-lg">CarWash POS</span>
+          <span className="font-bold text-lg">Auto Buttler</span>
         </div>
         <button
           className="md:hidden btn btn-sm btn-ghost"
