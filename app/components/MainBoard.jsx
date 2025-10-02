@@ -147,7 +147,12 @@ export default function Layout() {
               <button className="btn btn-primary btn-sm w-32 flex items-center justify-start gap-2">
                 <Car size={16} /> New Wash
               </button>
-              <button className="btn btn-secondary btn-sm w-32 flex items-center justify-start gap-2">
+              <button
+                onClick={() =>
+                  document.getElementById("expense_modal").showModal()
+                }
+                className="btn btn-secondary btn-sm w-32 flex items-center justify-start gap-2"
+              >
                 <Receipt size={16} /> Expense
               </button>
             </div>

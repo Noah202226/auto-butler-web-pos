@@ -53,20 +53,24 @@ export default function SettingsLayout() {
       <h2 className="text-2xl font-bold mb-4 text-gray-800">Settings</h2>
 
       {/* Tabs */}
-      <div className="flex gap-6 border-b mb-6">
-        {["personalization", "products", "bays"].map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`pb-2 px-4 font-medium capitalize ${
-              activeTab === tab
-                ? "border-b-2 border-blue-500 text-blue-600"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
+      <div className="overflow-x-auto">
+        <div className="flex gap-6 border-b mb-6 min-w-max whitespace-nowrap">
+          {["personalization", "products", "bays", "employees", "services"].map(
+            (tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`pb-2 px-4 font-medium capitalize ${
+                  activeTab === tab
+                    ? "border-b-2 border-blue-500 text-blue-600"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                {tab}
+              </button>
+            )
+          )}
+        </div>
       </div>
 
       {/* Content */}

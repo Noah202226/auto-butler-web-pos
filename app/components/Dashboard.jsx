@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useBayStore } from "../stores/useBayStore";
 import toast from "react-hot-toast";
+import ServiceSelect from "./Helpers/ServiceSelect";
 
 export default function POSBays() {
   const {
@@ -25,18 +26,18 @@ export default function POSBays() {
     vehicle: "",
     plate: "",
     service: "",
+    servicePrice: 0,
     employee: "",
   });
   const [amountReceived, setAmountReceived] = useState("");
   const [change, setChange] = useState(0);
-  const servicePrice = 200;
 
   // --- 🔹 Stats Computation ---
   const totalReserved = bays.filter((b) => b.status === "reserved").length;
   const totalOccupied = bays.filter((b) => b.status === "occupied").length;
   const totalAvailable = bays.filter((b) => b.status === "available").length;
   const totalTransactions = bays.filter((b) => b.customerName).length;
-  const totalAmount = totalTransactions * servicePrice;
+  const totalAmount = totalTransactions * customerInfo?.servicePrice;
 
   function handleOpen(bay) {
     setActiveBay(bay);
@@ -53,6 +54,7 @@ export default function POSBays() {
       vehicle: "",
       plate: "",
       service: "",
+      servicePrice: 0,
       employee: "",
     });
     setAmountReceived("");
@@ -69,6 +71,7 @@ export default function POSBays() {
       plateNumber: customerInfo.plate,
       vehicle: customerInfo.vehicle,
       service: customerInfo.service,
+      servicePrice: customerInfo.servicePrice,
     });
 
     toast.success(`✅ Transaction started for Bay ${activeBay.bayName}`);
@@ -80,11 +83,11 @@ export default function POSBays() {
   }
 
   async function confirmFinish() {
-    const companyShare = servicePrice * 0.7;
-    const employeeShare = servicePrice * 0.3;
+    const companyShare = customerInfo.servicePrice * 0.7;
+    const employeeShare = customerInfo.servicePrice * 0.3;
 
     await finishTransaction(activeBay.docId, {
-      employeeId: customerInfo.employee,
+      employeeId: customerInfo.$id,
       employeeName: customerInfo.employee,
       amountReceived: Number(amountReceived),
       change: Number(change),
@@ -111,7 +114,7 @@ export default function POSBays() {
   function handleAmountChange(e) {
     const value = e.target.value;
     setAmountReceived(value);
-    setChange(value - servicePrice);
+    setChange(value - customerInfo.servicePrice);
   }
 
   return (
@@ -227,27 +230,11 @@ export default function POSBays() {
                       })
                     }
                   />
-                  <select
-                    className="select select-bordered w-full"
-                    value={customerInfo.service}
-                    onChange={(e) =>
-                      setCustomerInfo({
-                        ...customerInfo,
-                        service: e.target.value,
-                      })
-                    }
-                  >
-                    <option value="" disabled>
-                      -- Select Service --
-                    </option>
-                    <option value="Car Wash">Car Wash</option>
-                    <option value="Waxing">Waxing</option>
-                    <option value="Interior Detailing">
-                      Interior Detailing
-                    </option>
-                    <option value="Engine Wash">Engine Wash</option>
-                  </select>
 
+                  <ServiceSelect
+                    customerInfo={customerInfo}
+                    setCustomerInfo={setCustomerInfo}
+                  />
                   <button
                     onClick={saveCustomerInfo}
                     className="btn btn-success w-full mt-2"
@@ -261,7 +248,7 @@ export default function POSBays() {
               {showTender && (
                 <div className="space-y-4">
                   <p className="font-semibold text-lg">
-                    Total: ₱{servicePrice}
+                    Total: ₱{customerInfo.servicePrice}
                   </p>
 
                   <div>
@@ -308,11 +295,12 @@ export default function POSBays() {
 
                   <div className="p-3 rounded-lg bg-base-200">
                     <p>
-                      Company Share (70%): ₱{(servicePrice * 0.7).toFixed(2)}
+                      Company Share (70%): ₱
+                      {(customerInfo.servicePrice * 0.7).toFixed(2)}
                     </p>
                     <p>
                       {customerInfo.employee || "Employee"} Share (30%): ₱
-                      {(servicePrice * 0.3).toFixed(2)}
+                      {(customerInfo.servicePrice * 0.3).toFixed(2)}
                     </p>
                   </div>
 
