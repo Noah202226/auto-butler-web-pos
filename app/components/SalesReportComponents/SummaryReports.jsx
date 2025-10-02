@@ -1,3 +1,4 @@
+// SummaryReports.tsx
 "use client";
 import useSalesStore from "../../stores/useSaleStore";
 import { useEffect } from "react";
@@ -15,22 +16,35 @@ export default function SummaryReports() {
   const totalExpenses = expenses.reduce((acc, e) => acc + (e.amount || 0), 0);
   const netProfit = totalSales - totalExpenses;
 
+  const cards = [
+    {
+      title: "Total Sales",
+      value: `₱${totalSales.toLocaleString()}`,
+      color: "from-blue-500 to-blue-600",
+    },
+    {
+      title: "Total Expenses",
+      value: `₱${totalExpenses.toLocaleString()}`,
+      color: "from-red-500 to-red-600",
+    },
+    {
+      title: "Net Profit",
+      value: `₱${netProfit.toLocaleString()}`,
+      color: "from-green-500 to-green-600",
+    },
+  ];
+
   return (
-    <div className="grid grid-cols-3 gap-4 mt-4">
-      <div className="p-4 rounded-xl bg-blue-200 shadow">
-        <p className="text-sm opacity-80">Total Sales</p>
-        <p className="text-2xl font-bold">{totalSales.toLocaleString()}</p>
-      </div>
-
-      <div className="p-4 rounded-xl bg-red-200 shadow">
-        <p className="text-sm opacity-80">Total Expenses</p>
-        <p className="text-2xl font-bold">{totalExpenses.toLocaleString()}</p>
-      </div>
-
-      <div className="p-4 rounded-xl bg-green-200 shadow">
-        <p className="text-sm opacity-80">Net Profit</p>
-        <p className="text-2xl font-bold">{netProfit.toLocaleString()}</p>
-      </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {cards.map((c) => (
+        <div
+          key={c.title}
+          className={`p-5 rounded-2xl shadow-md bg-gradient-to-r ${c.color} text-white`}
+        >
+          <p className="text-sm opacity-90">{c.title}</p>
+          <p className="text-3xl font-bold mt-1">{c.value}</p>
+        </div>
+      ))}
     </div>
   );
 }
