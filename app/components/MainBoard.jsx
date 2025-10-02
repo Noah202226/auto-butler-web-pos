@@ -17,6 +17,9 @@ import Sidebar from "./Sidebar";
 import { useUIStore } from "../stores/useUIStore";
 import { useAuthStore } from "../stores/authStore";
 import Dashboard from "./Dashboard";
+import SummaryReports from "./SalesReportComponents/SummaryReports";
+import AddExpenseModal from "./Helpers/AddExpenseModal";
+import TransactionsReports from "./SalesReportComponents/TransactionsReports";
 
 export default function Layout() {
   const { activeTab, openSidebar } = useUIStore();
@@ -48,8 +51,7 @@ export default function Layout() {
               <Menu size={20} />
             </button>
             <div className="md:hidden flex items-center gap-2 font-bold text-lg">
-              <span className="text-primary">🚗</span>
-              <span>CarWash POS</span>
+              <span>Auto Buttler</span>
             </div>
           </div>
 
@@ -77,8 +79,17 @@ export default function Layout() {
             {/* Action buttons (hidden on mobile) */}
             <div className="hidden md:flex gap-2">
               <button className="btn btn-primary btn-sm">+ New Wash</button>
-              <button className="btn btn-secondary btn-sm">+ Expense</button>
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={() =>
+                  document.getElementById("expense_modal").showModal()
+                }
+              >
+                + Expense
+              </button>
             </div>
+
+            <AddExpenseModal />
 
             {/* User Menu */}
             <div className="dropdown dropdown-end">
@@ -118,6 +129,8 @@ export default function Layout() {
           {activeTab === "sales" && (
             <div className="text-xl font-semibold flex items-center">
               <CreditCard className="mr-2" /> Sales Content
+              <SummaryReports />
+              <TransactionsReports />
             </div>
           )}
           {activeTab === "settings" && (
