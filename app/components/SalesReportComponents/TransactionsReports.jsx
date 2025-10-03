@@ -53,10 +53,7 @@ export default function TransactionsReports() {
   }, [expenses, dateFrom, dateTo]);
 
   // Totals
-  const totalSales = filteredSales.reduce(
-    (acc, s) => acc + (s.amountReceived || s.servicePrice || 0),
-    0
-  );
+  const totalSales = filteredSales.reduce((acc, s) => acc + s.servicePrice, 0);
   const totalExpenses = filteredExpenses.reduce(
     (acc, e) => acc + (e.amount || 0),
     0

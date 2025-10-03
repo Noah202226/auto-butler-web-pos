@@ -29,6 +29,7 @@ export default function POSBays() {
     servicePrice: 0,
     employee: "",
   });
+
   const [amountReceived, setAmountReceived] = useState("");
   const [change, setChange] = useState(0);
 
@@ -82,7 +83,7 @@ export default function POSBays() {
     setShowTender(true);
   }
 
-  async function confirmFinish() {
+  async function confirmFinish(customerInfo) {
     const companyShare = customerInfo.servicePrice * 0.7;
     const employeeShare = customerInfo.servicePrice * 0.3;
 
@@ -306,7 +307,7 @@ export default function POSBays() {
 
                   <button
                     disabled={change < 0 || !customerInfo.employee}
-                    onClick={confirmFinish}
+                    onClick={() => confirmFinish(customerInfo)}
                     className="btn btn-primary w-full mt-2"
                   >
                     ✅ Confirm & Finish
