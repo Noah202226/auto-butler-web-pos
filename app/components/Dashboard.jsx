@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useBayStore } from "../stores/useBayStore";
 import toast from "react-hot-toast";
 import ServiceSelect from "./Helpers/ServiceSelect";
+import EmployeeSelect from "./Helpers/EmployeeSelect";
 
 export default function POSBays() {
   const {
@@ -20,6 +21,10 @@ export default function POSBays() {
   const [activeBay, setActiveBay] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [showTender, setShowTender] = useState(false);
+
+  const [saving, setSaving] = useState(false);
+  const [finishing, setFinishing] = useState(false);
+  const [reserving, setReserving] = useState(false);
 
   const [customerInfo, setCustomerInfo] = useState({
     name: "",
@@ -40,8 +45,37 @@ export default function POSBays() {
   const totalTransactions = bays.filter((b) => b.customerName).length;
   const totalAmount = totalTransactions * customerInfo?.servicePrice;
 
-  function handleOpen(bay) {
+  async function handleOpen(bay) {
+    console.log(bay);
     setActiveBay(bay);
+
+    if (bay.status === "occupied") {
+      // fetch ongoing transaction
+      const activeTx = await useBayStore
+        .getState()
+        .getActiveTransaction(bay.docId);
+
+      if (activeTx) {
+        setCustomerInfo({
+          name: activeTx.customerName,
+          vehicle: activeTx.vehicle,
+          plate: activeTx.plateNumber,
+          service: activeTx.service,
+          servicePrice: activeTx.servicePrice, // ✅ actual value
+          employee: activeTx.employeeName || "",
+        });
+      }
+    } else {
+      // fresh state for new transaction
+      setCustomerInfo({
+        name: "",
+        vehicle: "",
+        plate: "",
+        service: "",
+        servicePrice: 0,
+        employee: "",
+      });
+    }
     document.getElementById("posModal").showModal();
   }
 
@@ -67,49 +101,67 @@ export default function POSBays() {
   }
 
   async function saveCustomerInfo() {
-    await startTransaction(activeBay.docId, {
-      name: customerInfo.name,
-      plateNumber: customerInfo.plate,
-      vehicle: customerInfo.vehicle,
-      service: customerInfo.service,
-      servicePrice: customerInfo.servicePrice,
-    });
-
-    toast.success(`✅ Transaction started for Bay ${activeBay.bayName}`);
-    closeModal();
+    try {
+      setSaving(true);
+      await startTransaction(activeBay.docId, {
+        name: customerInfo.name,
+        plateNumber: customerInfo.plate,
+        vehicle: customerInfo.vehicle,
+        service: customerInfo.serviceName,
+        servicePrice: customerInfo.servicePrice,
+        employeeName: customerInfo.employee,
+      });
+      toast.success(`✅ Transaction started for Bay ${activeBay.bayName}`);
+      closeModal();
+    } catch (error) {
+      toast.error("❌ Failed to save transaction");
+    } finally {
+      setSaving(false);
+    }
   }
 
   function handleFinishTransaction() {
     setShowTender(true);
   }
 
-  async function confirmFinish(customerInfo) {
-    const companyShare = customerInfo.servicePrice * 0.7;
-    const employeeShare = customerInfo.servicePrice * 0.3;
+  async function confirmFinish() {
+    try {
+      setFinishing(true);
+      const companyShare = customerInfo.servicePrice * 0.7;
+      const employeeShare = customerInfo.servicePrice * 0.3;
 
-    await finishTransaction(activeBay.docId, {
-      employeeId: customerInfo.$id,
-      employeeName: customerInfo.employee,
-      amountReceived: Number(amountReceived),
-      change: Number(change),
-      companyShare,
-      employeeShare,
-      paymentMethod: "cash", // you can extend this to select method
-    });
+      await finishTransaction(activeBay.docId, {
+        amountReceived: Number(amountReceived),
+        change: Number(change),
+        companyShare,
+        employeeShare,
+        paymentMethod: "cash",
+      });
 
-    toast.success(`💰 Transaction finished for Bay ${activeBay.bayName}`);
-    closeModal();
+      toast.success(`💰 Transaction finished for Bay ${activeBay.bayName}`);
+      closeModal();
+    } catch (error) {
+      toast.error("❌ Failed to finish transaction");
+    } finally {
+      setFinishing(false);
+    }
   }
 
   async function handleReserve() {
-    await toggleReserve(activeBay.docId);
-
-    if (activeBay.status === "reserved") {
-      toast(`🔓 Bay ${activeBay.bayName} unreserved`, { icon: "🔓" });
-    } else {
-      toast(`⭐ Bay ${activeBay.bayName} reserved`, { icon: "⭐" });
+    try {
+      setReserving(true);
+      await toggleReserve(activeBay.docId);
+      if (activeBay.status === "reserved") {
+        toast(`🔓 Bay ${activeBay.bayName} unreserved`, { icon: "🔓" });
+      } else {
+        toast(`⭐ Bay ${activeBay.bayName} reserved`, { icon: "⭐" });
+      }
+      closeModal();
+    } catch (error) {
+      toast.error("❌ Failed to update reservation");
+    } finally {
+      setReserving(false);
     }
-    closeModal();
   }
 
   function handleAmountChange(e) {
@@ -236,11 +288,18 @@ export default function POSBays() {
                     customerInfo={customerInfo}
                     setCustomerInfo={setCustomerInfo}
                   />
+
+                  <EmployeeSelect
+                    customerInfo={customerInfo}
+                    setCustomerInfo={setCustomerInfo}
+                  />
+
                   <button
                     onClick={saveCustomerInfo}
+                    disabled={saving}
                     className="btn btn-success w-full mt-2"
                   >
-                    💾 Save Transaction
+                    {saving ? "💾 Saving..." : "💾 Save Transaction"}
                   </button>
                 </div>
               )}
@@ -252,7 +311,7 @@ export default function POSBays() {
                     Total: ₱{customerInfo.servicePrice}
                   </p>
 
-                  <div>
+                  {/* <div>
                     <label className="block font-medium mb-1">
                       Assign Carwash Boy
                     </label>
@@ -273,7 +332,7 @@ export default function POSBays() {
                       <option value="Pedro">Pedro</option>
                       <option value="Maria">Maria</option>
                     </select>
-                  </div>
+                  </div> */}
 
                   <input
                     type="number"
@@ -306,11 +365,11 @@ export default function POSBays() {
                   </div>
 
                   <button
-                    disabled={change < 0 || !customerInfo.employee}
+                    disabled={change < 0}
                     onClick={() => confirmFinish(customerInfo)}
                     className="btn btn-primary w-full mt-2"
                   >
-                    ✅ Confirm & Finish
+                    {finishing ? "⏳ Finishing..." : "✅ Confirm & Finish"}
                   </button>
                 </div>
               )}
@@ -336,9 +395,12 @@ export default function POSBays() {
                   )}
                   <button
                     onClick={handleReserve}
+                    disabled={reserving}
                     className="btn btn-warning w-full"
                   >
-                    {activeBay.status === "reserved"
+                    {reserving
+                      ? "⏳ Updating..."
+                      : activeBay.status === "reserved"
                       ? "🔓 Unreserve"
                       : "⭐ Reserve"}
                   </button>

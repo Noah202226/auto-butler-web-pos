@@ -3,6 +3,8 @@ import { useEffect, useState, useMemo } from "react";
 import useSalesStore from "../../stores/useSaleStore";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable"; // ✅ import the actual function
+import ConfirmModal from "../Helpers/ConfirmModal";
+import toast from "react-hot-toast";
 
 export default function TransactionsReports() {
   const {
@@ -16,6 +18,10 @@ export default function TransactionsReports() {
   } = useSalesStore();
 
   const [activeTab, setActiveTab] = useState("sales");
+
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmMessage, setConfirmMessage] = useState("");
+  const [confirmAction, setConfirmAction] = useState(() => () => {});
 
   // Filters
   const [dateFrom, setDateFrom] = useState("");
@@ -248,34 +254,40 @@ export default function TransactionsReports() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-end gap-4 mb-4">
-        <div>
-          <label className="text-sm font-medium text-gray-600">From</label>
+      <div className="flex flex-wrap items-end gap-6 mb-6 bg-[var(--theme-text-muted)] p-4 rounded-xl shadow-sm">
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text font-medium">From</span>
+          </label>
           <input
             type="date"
             value={dateFrom}
             onChange={(e) => setDateFrom(e.target.value)}
-            className="ml-2 border rounded-lg px-3 py-1 shadow-sm focus:ring-2 focus:ring-blue-400"
+            className="input input-bordered input-primary w-44"
           />
         </div>
-        <div>
-          <label className="text-sm font-medium text-gray-600">To</label>
+
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text font-medium">To</span>
+          </label>
           <input
             type="date"
             value={dateTo}
             onChange={(e) => setDateTo(e.target.value)}
-            className="ml-2 border rounded-lg px-3 py-1 shadow-sm focus:ring-2 focus:ring-blue-400"
+            className="input input-bordered input-primary w-44"
           />
         </div>
+
         {activeTab === "sales" && (
-          <div>
-            <label className="text-sm font-medium text-gray-600">
-              Employee
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text font-medium">Employee</span>
             </label>
             <select
               value={employeeFilter}
               onChange={(e) => setEmployeeFilter(e.target.value)}
-              className="ml-2 border rounded-lg px-3 py-1 shadow-sm focus:ring-2 focus:ring-blue-400"
+              className="select select-bordered select-primary w-52"
             >
               <option value="">All</option>
               {[...new Set(sales.map((s) => s.employeeName))].map((emp) => (
@@ -394,7 +406,7 @@ export default function TransactionsReports() {
                       {/* <td className="px-4 py-2">{e.bayId}</td> */}
                       <td className="px-4 py-2">{e.customerName}</td>
                       <td className="px-4 py-2">
-                        {e.vehicle} <span>({e.plateNumber})</span>
+                        {e.vehicle} <span>({e.vehicle})</span>
                       </td>
                       <td className="px-4 py-2">{e.service}</td>
                       <td className="px-4 py-2">{e.servicePrice}</td>
@@ -413,7 +425,21 @@ export default function TransactionsReports() {
                       </td>
                       <td>
                         <button
-                          onClick={() => deleteSale(e.$id)}
+                          onClick={() => {
+                            setConfirmMessage(
+                              `Are you sure you want to delete sale for ${e.customerName}?`
+                            );
+                            setConfirmAction(() => async () => {
+                              try {
+                                await deleteSale(e.$id);
+                                toast.success("✅ Sale deleted successfully");
+                              } catch (err) {
+                                console.error(err);
+                                toast.error("❌ Failed to delete sale");
+                              }
+                            });
+                            setConfirmOpen(true);
+                          }}
                           className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-xs shadow-sm"
                         >
                           Delete
@@ -466,7 +492,21 @@ export default function TransactionsReports() {
                     </span>
                     <div className="mt-3">
                       <button
-                        onClick={() => deleteSale(item.$id)}
+                        onClick={() => {
+                          setConfirmMessage(
+                            `Are you sure you want to delete sale for ${e.customerName}?`
+                          );
+                          setConfirmAction(() => async () => {
+                            try {
+                              await deleteSale(e.$id);
+                              toast.success("✅ Sale deleted successfully");
+                            } catch (err) {
+                              console.error(err);
+                              toast.error("❌ Failed to delete sale");
+                            }
+                          });
+                          setConfirmOpen(true);
+                        }}
                         className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-xs shadow-sm"
                       >
                         Delete
@@ -504,7 +544,23 @@ export default function TransactionsReports() {
                       </td>
                       <td>
                         <button
-                          onClick={() => deleteExpense(e.$id)}
+                          onClick={() => {
+                            setConfirmMessage(
+                              `Are you sure you want to delete expense: ${e.category}?`
+                            );
+                            setConfirmAction(() => async () => {
+                              try {
+                                await deleteExpense(e.$id);
+                                toast.success(
+                                  "✅ Expense deleted successfully"
+                                );
+                              } catch (err) {
+                                console.error(err);
+                                toast.error("❌ Failed to delete expense");
+                              }
+                            });
+                            setConfirmOpen(true);
+                          }}
                           className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-xs shadow-sm"
                         >
                           Delete
@@ -541,7 +597,21 @@ export default function TransactionsReports() {
                     </p>
                     <div className="mt-3">
                       <button
-                        onClick={() => deleteExpense(item.$id)}
+                        onClick={() => {
+                          setConfirmMessage(
+                            `Are you sure you want to delete expense: ${e.category}?`
+                          );
+                          setConfirmAction(() => async () => {
+                            try {
+                              await deleteExpense(e.$id);
+                              toast.success("✅ Expense deleted successfully");
+                            } catch (err) {
+                              console.error(err);
+                              toast.error("❌ Failed to delete expense");
+                            }
+                          });
+                          setConfirmOpen(true);
+                        }}
                         className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-xs shadow-sm"
                       >
                         Delete
@@ -554,6 +624,13 @@ export default function TransactionsReports() {
           </>
         )}
       </div>
+
+      <ConfirmModal
+        show={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={confirmAction}
+        message={confirmMessage}
+      />
     </div>
   );
 }

@@ -91,6 +91,22 @@ export const useBayStore = create(
         }
       },
 
+      // inside useBayStore
+      getActiveTransaction: async (docId) => {
+        try {
+          const res = await databases.listDocuments(
+            DATABASE_ID,
+            TRANSACTIONS_COLLECTION_ID,
+            [Query.equal("bayId", docId), Query.equal("status", "ongoing")]
+          );
+
+          return res.documents.length > 0 ? res.documents[0] : null;
+        } catch (err) {
+          console.error("❌ Error getting active transaction:", err);
+          return null;
+        }
+      },
+
       // 🔹 Finish transaction
       finishTransaction: async (docId, finishInfo = {}) => {
         try {

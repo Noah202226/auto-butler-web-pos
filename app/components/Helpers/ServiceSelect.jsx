@@ -13,16 +13,19 @@ export default function ServiceSelect({ customerInfo, setCustomerInfo }) {
   return (
     <select
       className="select select-bordered w-full"
-      value={customerInfo.serviceName || ""}
+      value={customerInfo.serviceId || ""} // ✅ use serviceId here
       onChange={(e) => {
-        console.log(e.target.value);
+        const selected = services.find((s) => s.$id === e.target.value);
+        if (!selected) return;
+
         setCustomerInfo({
           ...customerInfo,
-          service: e.target.value,
-          servicePrice: services.find((s) => s.$id === e.target.value)
-            ?.servicePrice,
+          serviceId: selected.$id, // ✅ store id
+          serviceName: selected.serviceName, // ✅ store name
+          servicePrice: selected.servicePrice, // ✅ store price
         });
-        console.log(customerInfo.servicePrice);
+
+        console.log("Selected service:", selected);
       }}
     >
       <option value="" disabled>
@@ -31,7 +34,7 @@ export default function ServiceSelect({ customerInfo, setCustomerInfo }) {
 
       {services.map((service) => (
         <option key={service.$id} value={service.$id}>
-          {service?.serviceName} - ₱{service?.servicePrice}
+          {service.serviceName} - ₱{service.servicePrice}
         </option>
       ))}
     </select>
