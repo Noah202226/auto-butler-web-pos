@@ -494,11 +494,11 @@ export default function TransactionsReports() {
                       <button
                         onClick={() => {
                           setConfirmMessage(
-                            `Are you sure you want to delete sale for ${e.customerName}?`
+                            `Are you sure you want to delete sale for ${item.customerName}?`
                           );
                           setConfirmAction(() => async () => {
                             try {
-                              await deleteSale(e.$id);
+                              await deleteSale(item.$id);
                               toast.success("✅ Sale deleted successfully");
                             } catch (err) {
                               console.error(err);
@@ -599,11 +599,11 @@ export default function TransactionsReports() {
                       <button
                         onClick={() => {
                           setConfirmMessage(
-                            `Are you sure you want to delete expense: ${e.category}?`
+                            `Are you sure you want to delete expense: ${item.category}?`
                           );
                           setConfirmAction(() => async () => {
                             try {
-                              await deleteExpense(e.$id);
+                              await deleteExpense(item.$id);
                               toast.success("✅ Expense deleted successfully");
                             } catch (err) {
                               console.error(err);
