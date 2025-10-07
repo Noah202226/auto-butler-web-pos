@@ -12,7 +12,7 @@ import { useSettingsStore } from "../stores/useSettingsStore";
 
 export default function Sidebar() {
   const { activeTab, setActiveTab, sidebarOpen, closeSidebar } = useUIStore();
-  const { businessName, initial } = useSettingsStore;
+  const { businessName, initial } = useSettingsStore();
 
   const navItems = [
     { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
