@@ -36,7 +36,7 @@ export default function Hero() {
       {/* Left Side - Illustration + Text */}
       <div className="flex flex-col justify-center items-center text-center px-6 py-10 md:flex-1 md:px-12 lg:px-16">
         <motion.img
-          src="/auto-butler.jpg"
+          src="/auto-butler.png"
           alt="Clinic Illustration"
           className="w-40 sm:w-56 md:w-72 lg:w-80"
           initial={{ opacity: 0 }}

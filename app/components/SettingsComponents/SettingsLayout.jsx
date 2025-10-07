@@ -6,6 +6,8 @@ import { useProductStore } from "../../stores/useProductStore";
 import { useBaysStore } from "../../stores/useBaysStore";
 import AddProductModal from "../Helpers/AddProductModal";
 import AddBayModal from "../Helpers/AddBayModal";
+import { useServiceStore } from "@/app/stores/useServiceStore";
+import { useEmployeeStore } from "@/app/stores/useEmployeeStore";
 
 export default function SettingsLayout() {
   const [activeTab, setActiveTab] = useState("personalization");
@@ -29,11 +31,19 @@ export default function SettingsLayout() {
   // --- Bays Store
   const { bays, fetchBays, addBay, removeBay } = useBaysStore();
 
+  // --- Services Store
+  const { services, fetchServices } = useServiceStore();
+
+  // --- Employee Store
+  const { employees, fetchEmployees } = useEmployeeStore();
+
   // Load data on mount
   useEffect(() => {
     fetchSettings();
     fetchProducts();
     fetchBays();
+    fetchServices();
+    fetchEmployees();
   }, []);
 
   // handle logo upload
@@ -203,9 +213,7 @@ export default function SettingsLayout() {
         {/* Bays */}
         {activeTab === "bays" && (
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-700">
-              Service Bays
-            </h3>
+            <h3 className="text-lg font-semibold text-gray-700">Bays</h3>
             <p className="text-gray-500 text-sm">
               Configure and manage your available service bays.
             </p>
@@ -247,6 +255,110 @@ export default function SettingsLayout() {
                         className="text-center text-gray-500 py-4"
                       >
                         No bays configured yet.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "services" && (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-700">Services</h3>
+            <p className="text-gray-500 text-sm">
+              Configure and manage your available services.
+            </p>
+
+            {/* <AddBayModal /> */}
+
+            {/* Bay list */}
+            <div className="mt-4 border rounded-lg overflow-hidden">
+              <table className="w-full text-sm text-gray-600">
+                <thead className="bg-gray-100 text-gray-800">
+                  <tr>
+                    <th className="px-4 py-2 text-left">Services Name</th>
+                    <th className="px-4 py-2 text-left">Price</th>
+                    <th className="px-4 py-2 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {services.length > 0 ? (
+                    services.map((b) => (
+                      <tr key={b.$id} className="border-t">
+                        <td className="px-4 py-2">{b.serviceName}</td>
+                        <td className="px-4 py-2">{b.servicePrice}</td>
+                        <td className="px-4 py-2 text-right">
+                          <button
+                            onClick={() => removeBay(b.$id)}
+                            className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-xs"
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan={2}
+                        className="text-center text-gray-500 py-4"
+                      >
+                        No Services configured yet.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "employees" && (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-700">Employees</h3>
+            <p className="text-gray-500 text-sm">
+              Configure and manage your employees.
+            </p>
+
+            {/* <AddBayModal /> */}
+
+            {/* Bay list */}
+            <div className="mt-4 border rounded-lg overflow-hidden">
+              <table className="w-full text-sm text-gray-600">
+                <thead className="bg-gray-100 text-gray-800">
+                  <tr>
+                    <th className="px-4 py-2 text-left">Employee Name</th>
+                    <th className="px-4 py-2 text-left">Date hired</th>
+                    <th className="px-4 py-2 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {employees.length > 0 ? (
+                    employees.map((b) => (
+                      <tr key={b.$id} className="border-t">
+                        <td className="px-4 py-2">{b.name}</td>
+                        <td className="px-4 py-2">
+                          {new Date(b.$createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="px-4 py-2 text-right">
+                          <button
+                            onClick={() => removeBay(b.$id)}
+                            className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-xs"
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan={2}
+                        className="text-center text-gray-500 py-4"
+                      >
+                        No Services configured yet.
                       </td>
                     </tr>
                   )}

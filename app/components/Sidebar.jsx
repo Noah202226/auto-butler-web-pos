@@ -41,7 +41,7 @@ export default function Sidebar() {
           { key: "products", label: "Products", icon: ShoppingCart },
           { key: "sales", label: "Sales", icon: CreditCard },
           { key: "settings", label: "Settings", icon: Settings },
-          { key: "contact", label: "Contact", icon: Phone },
+          // { key: "contact", label: "Contact", icon: Phone },
         ].map((item) => (
           <button
             key={item.key}
