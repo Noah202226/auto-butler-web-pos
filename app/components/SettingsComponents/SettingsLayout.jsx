@@ -1,44 +1,35 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import toast from "react-hot-toast";
+import { Save, Loader2 } from "lucide-react";
 import { useSettingsStore } from "../../stores/useSettingsStore";
 import { useProductStore } from "../../stores/useProductStore";
 import { useBaysStore } from "../../stores/useBaysStore";
+import { useServiceStore } from "../../stores/useServiceStore";
+import { useEmployeeStore } from "../../stores/useEmployeeStore";
 import AddProductModal from "../Helpers/AddProductModal";
 import AddBayModal from "../Helpers/AddBayModal";
-import { useServiceStore } from "@/app/stores/useServiceStore";
-import { useEmployeeStore } from "@/app/stores/useEmployeeStore";
 import EmployeeList from "./EmployeeList";
 
 export default function SettingsLayout() {
   const [activeTab, setActiveTab] = useState("personalization");
 
-  // --- Settings Store (personalization)
   const {
+    loading,
     businessName,
-    themeColor,
-    logo,
     setBusinessName,
-    setThemeColor,
-    setLogo,
+    initial,
+    setInitial,
     fetchSettings,
     saveSettings,
   } = useSettingsStore();
 
-  // --- Products Store
-  const { products, fetchProducts, addProduct, removeProduct } =
-    useProductStore();
-
-  // --- Bays Store
-  const { bays, fetchBays, addBay, removeBay } = useBaysStore();
-
-  // --- Services Store
+  const { products, fetchProducts, removeProduct } = useProductStore();
+  const { bays, fetchBays, removeBay } = useBaysStore();
   const { services, fetchServices } = useServiceStore();
+  const { fetchEmployees } = useEmployeeStore();
 
-  // --- Employee Store
-  const { employees, fetchEmployees } = useEmployeeStore();
-
-  // Load data on mount
   useEffect(() => {
     fetchSettings();
     fetchProducts();
@@ -47,136 +38,129 @@ export default function SettingsLayout() {
     fetchEmployees();
   }, []);
 
-  // handle logo upload
-  const handleLogoUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setLogo(event.target?.result);
-      };
-      reader.readAsDataURL(file);
+  const handleSave = async () => {
+    try {
+      await saveSettings();
+      toast.success("✅ Settings updated successfully");
+    } catch (err) {
+      console.error("Save failed:", err);
+      toast.error("Failed to save settings.");
     }
   };
 
   return (
-    <div className="p-6 bg-white rounded-2xl shadow-lg mt-6">
-      <h2 className="text-2xl font-bold mb-4 text-gray-800">Settings</h2>
+    <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 mt-6 animate-fade-up">
+      <h2 className="text-2xl font-bold text-gray-800 mb-6">Settings</h2>
 
       {/* Tabs */}
-      <div className="overflow-x-auto">
-        <div className="flex gap-6 border-b mb-6 min-w-max whitespace-nowrap">
-          {["personalization", "products", "bays", "employees", "services"].map(
-            (tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`pb-2 px-4 font-medium capitalize ${
-                  activeTab === tab
-                    ? "border-b-2 border-blue-500 text-blue-600"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                {tab}
-              </button>
-            )
-          )}
-        </div>
+      <div className="flex overflow-x-auto gap-6 border-b pb-2 mb-6 text-sm font-medium text-gray-500">
+        {["personalization", "products", "bays", "employees", "services"].map(
+          (tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`capitalize transition-all pb-2 px-1 ${
+                activeTab === tab
+                  ? "text-blue-600 border-b-2 border-blue-500"
+                  : "hover:text-gray-700"
+              }`}
+            >
+              {tab}
+            </button>
+          )
+        )}
       </div>
 
       {/* Content */}
-      <div className="mt-4">
-        {/* Personalization */}
+      <div
+        key={activeTab}
+        className="transition-all duration-300 ease-out animate-fade-up"
+      >
+        {/* PERSONALIZATION */}
         {activeTab === "personalization" && (
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-700">
-              App Personalization
-            </h3>
+            <h2 className="text-lg font-semibold text-gray-800">
+              General Settings
+            </h2>
 
-            {/* Business Name */}
+            {/* Company Name */}
             <div>
-              <label className="block text-sm text-gray-600 font-medium">
-                Business Name
+              <label className="block text-sm text-gray-500 mb-1">
+                Company Name
               </label>
               <input
                 type="text"
+                className="input input-bordered w-full"
+                placeholder="Enter business name"
                 value={businessName}
                 onChange={(e) => setBusinessName(e.target.value)}
-                placeholder="Enter business name"
-                className="mt-1 w-full border rounded-lg px-3 py-2 shadow-sm focus:ring-2 focus:ring-blue-400 text-black"
               />
             </div>
 
-            {/* Theme Color */}
-            {/* <div>
-              <label className="block text-sm text-gray-600 font-medium">
-                Theme Color
+            {/* Initial */}
+            <div>
+              <label className="block text-sm text-gray-500 mb-1">
+                Initial
               </label>
               <input
-                type="color"
-                value={themeColor}
-                onChange={(e) => setThemeColor(e.target.value)}
-                className="mt-1 h-10 w-20 border rounded cursor-pointer"
+                type="text"
+                maxLength={2}
+                className="input input-bordered w-24 text-center font-bold text-lg"
+                placeholder="A"
+                value={initial}
+                onChange={(e) => setInitial(e.target.value.toUpperCase())}
               />
-            </div> */}
+            </div>
 
-            {/* Logo Upload */}
-            {/* <div>
-              <label className="block text-sm text-gray-600 font-medium">
-                Logo
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleLogoUpload}
-                className="mt-1 block text-sm text-gray-600"
-              />
-              {logo && (
-                <img
-                  src={logo}
-                  alt="Logo preview"
-                  className="mt-2 h-16 object-contain"
-                />
-              )}
-            </div> */}
-
-            <button
-              onClick={saveSettings}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow text-sm"
-            >
-              💾 Save Settings
-            </button>
+            {/* Save Button */}
+            <div className="pt-2 flex justify-end">
+              <button
+                onClick={handleSave}
+                disabled={loading}
+                className="btn btn-primary flex items-center gap-2 shadow-md hover:shadow-lg"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save size={18} />
+                    Save Changes
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         )}
 
-        {/* Products */}
+        {/* PRODUCTS */}
         {activeTab === "products" && (
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-700">Products</h3>
-            <p className="text-gray-500 text-sm">
-              Configure services and products offered in your shop.
-            </p>
-
-            <AddProductModal />
-
-            {/* Product table */}
-            <div className="mt-4 border rounded-lg overflow-hidden">
-              <table className="w-full text-sm text-gray-600">
-                <thead className="bg-gray-100 text-gray-800">
+          <div className="space-y-5">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-gray-800">Products</h3>
+              <AddProductModal />
+            </div>
+            <div className="overflow-x-auto border border-gray-100 rounded-lg">
+              <table className="w-full text-sm text-gray-700">
+                <thead className="bg-gray-50 text-gray-600">
                   <tr>
                     <th className="px-4 py-2 text-left">Name</th>
                     <th className="px-4 py-2 text-left">Category</th>
-
                     <th className="px-4 py-2 text-left">Price</th>
-                    <th className="px-4 py-2 text-left">Stock/s</th>
-                    <th className="px-4 py-2 text-left">Total Value</th>
+                    <th className="px-4 py-2 text-left">Stock</th>
+                    <th className="px-4 py-2 text-left">Value</th>
                     <th className="px-4 py-2 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {products.length > 0 ? (
                     products.map((p) => (
-                      <tr key={p.$id} className="border-t">
+                      <tr
+                        key={p.$id}
+                        className="border-t hover:bg-gray-50 transition"
+                      >
                         <td className="px-4 py-2">{p.productName}</td>
                         <td className="px-4 py-2">{p.category}</td>
                         <td className="px-4 py-2">₱{p.price}</td>
@@ -184,11 +168,63 @@ export default function SettingsLayout() {
                         <td className="px-4 py-2">
                           ₱{p.price * p.stockQuantity}
                         </td>
-
                         <td className="px-4 py-2 text-right">
                           <button
                             onClick={() => removeProduct(p.$id)}
-                            className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-xs"
+                            className="text-xs bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md transition"
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan={6}
+                        className="text-center text-gray-400 py-4"
+                      >
+                        No products found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* BAYS */}
+        {activeTab === "bays" && (
+          <div className="space-y-5">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-gray-800">Bays</h3>
+              <AddBayModal />
+            </div>
+            <div className="overflow-x-auto border border-gray-100 rounded-lg">
+              <table className="w-full text-sm text-gray-700">
+                <thead className="bg-gray-50 text-gray-600">
+                  <tr>
+                    <th className="px-4 py-2 text-left">Bay Name</th>
+                    <th className="px-4 py-2 text-left">Created</th>
+                    <th className="px-4 py-2 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {bays.length > 0 ? (
+                    bays.map((b) => (
+                      <tr
+                        key={b.$id}
+                        className="border-t hover:bg-gray-50 transition"
+                      >
+                        <td className="px-4 py-2">{b.bayName}</td>
+                        <td className="px-4 py-2">
+                          {new Date(b.$createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="px-4 py-2 text-right">
+                          <button
+                            onClick={() => removeBay(b.$id)}
+                            className="text-xs bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md transition"
                           >
                             Delete
                           </button>
@@ -199,9 +235,9 @@ export default function SettingsLayout() {
                     <tr>
                       <td
                         colSpan={3}
-                        className="text-center text-gray-500 py-4"
+                        className="text-center text-gray-400 py-4"
                       >
-                        No products yet.
+                        No bays yet.
                       </td>
                     </tr>
                   )}
@@ -211,102 +247,36 @@ export default function SettingsLayout() {
           </div>
         )}
 
-        {/* Bays */}
-        {activeTab === "bays" && (
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-700">Bays</h3>
-            <p className="text-gray-500 text-sm">
-              Configure and manage your available service bays.
-            </p>
-
-            <AddBayModal />
-
-            {/* Bay list */}
-            <div className="mt-4 border rounded-lg overflow-hidden">
-              <table className="w-full text-sm text-gray-600">
-                <thead className="bg-gray-100 text-gray-800">
-                  <tr>
-                    <th className="px-4 py-2 text-left">Bay Name</th>
-                    <th className="px-4 py-2 text-left">Created At</th>
-                    <th className="px-4 py-2 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {bays.length > 0 ? (
-                    bays.map((b) => (
-                      <tr key={b.$id} className="border-t">
-                        <td className="px-4 py-2">{b.bayName}</td>
-                        <td className="px-4 py-2">
-                          {new Date(b.$createdAt).toLocaleDateString()}
-                        </td>
-                        <td className="px-4 py-2 text-right">
-                          <button
-                            onClick={() => removeBay(b.$id)}
-                            className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-xs"
-                          >
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td
-                        colSpan={2}
-                        className="text-center text-gray-500 py-4"
-                      >
-                        No bays configured yet.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
+        {/* SERVICES */}
         {activeTab === "services" && (
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-700">Services</h3>
-            <p className="text-gray-500 text-sm">
-              Configure and manage your available services.
-            </p>
-
-            {/* <AddBayModal /> */}
-
-            {/* Bay list */}
-            <div className="mt-4 border rounded-lg overflow-hidden">
-              <table className="w-full text-sm text-gray-600">
-                <thead className="bg-gray-100 text-gray-800">
+          <div className="space-y-5">
+            <h3 className="text-lg font-semibold text-gray-800">Services</h3>
+            <div className="overflow-x-auto border border-gray-100 rounded-lg">
+              <table className="w-full text-sm text-gray-700">
+                <thead className="bg-gray-50 text-gray-600">
                   <tr>
-                    <th className="px-4 py-2 text-left">Services Name</th>
+                    <th className="px-4 py-2 text-left">Service Name</th>
                     <th className="px-4 py-2 text-left">Price</th>
-                    <th className="px-4 py-2 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {services.length > 0 ? (
-                    services.map((b) => (
-                      <tr key={b.$id} className="border-t">
-                        <td className="px-4 py-2">{b.serviceName}</td>
-                        <td className="px-4 py-2">{b.servicePrice}</td>
-                        <td className="px-4 py-2 text-right">
-                          <button
-                            onClick={() => removeBay(b.$id)}
-                            className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-xs"
-                          >
-                            Delete
-                          </button>
-                        </td>
+                    services.map((s) => (
+                      <tr
+                        key={s.$id}
+                        className="border-t hover:bg-gray-50 transition"
+                      >
+                        <td className="px-4 py-2">{s.serviceName}</td>
+                        <td className="px-4 py-2">₱{s.servicePrice}</td>
                       </tr>
                     ))
                   ) : (
                     <tr>
                       <td
                         colSpan={2}
-                        className="text-center text-gray-500 py-4"
+                        className="text-center text-gray-400 py-4"
                       >
-                        No Services configured yet.
+                        No services yet.
                       </td>
                     </tr>
                   )}
@@ -316,15 +286,10 @@ export default function SettingsLayout() {
           </div>
         )}
 
+        {/* EMPLOYEES */}
         {activeTab === "employees" && (
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-700">Employees</h3>
-            <p className="text-gray-500 text-sm">
-              Configure and manage your employees.
-            </p>
-
-            {/* <AddBayModal /> */}
-
+          <div className="space-y-5">
+            <h3 className="text-lg font-semibold text-gray-800">Employees</h3>
             <EmployeeList />
           </div>
         )}

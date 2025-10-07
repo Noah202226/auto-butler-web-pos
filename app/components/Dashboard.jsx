@@ -12,19 +12,18 @@ export default function POSBays() {
     startTransaction,
     finishTransaction,
     toggleReserve,
+    addBay, // ✅ Make sure you have this function in your store
   } = useBayStore();
-
-  useEffect(() => {
-    fetchBays();
-  }, [fetchBays]);
 
   const [activeBay, setActiveBay] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [showTender, setShowTender] = useState(false);
-
   const [saving, setSaving] = useState(false);
   const [finishing, setFinishing] = useState(false);
   const [reserving, setReserving] = useState(false);
+  const [amountReceived, setAmountReceived] = useState("");
+  const [change, setChange] = useState(0);
+  const [addingBay, setAddingBay] = useState(false); // ✅ state for adding new bay
 
   const [customerInfo, setCustomerInfo] = useState({
     name: "",
@@ -35,38 +34,31 @@ export default function POSBays() {
     employee: "",
   });
 
-  const [amountReceived, setAmountReceived] = useState("");
-  const [change, setChange] = useState(0);
+  useEffect(() => {
+    fetchBays();
+  }, [fetchBays]);
 
-  // --- 🔹 Stats Computation ---
   const totalReserved = bays.filter((b) => b.status === "reserved").length;
   const totalOccupied = bays.filter((b) => b.status === "occupied").length;
   const totalAvailable = bays.filter((b) => b.status === "available").length;
-  const totalTransactions = bays.filter((b) => b.customerName).length;
-  const totalAmount = totalTransactions * customerInfo?.servicePrice;
 
   async function handleOpen(bay) {
-    console.log(bay);
     setActiveBay(bay);
-
     if (bay.status === "occupied") {
-      // fetch ongoing transaction
       const activeTx = await useBayStore
         .getState()
         .getActiveTransaction(bay.docId);
-
       if (activeTx) {
         setCustomerInfo({
           name: activeTx.customerName,
           vehicle: activeTx.vehicle,
           plate: activeTx.plateNumber,
           service: activeTx.service,
-          servicePrice: activeTx.servicePrice, // ✅ actual value
+          servicePrice: activeTx.servicePrice,
           employee: activeTx.employeeName || "",
         });
       }
     } else {
-      // fresh state for new transaction
       setCustomerInfo({
         name: "",
         vehicle: "",
@@ -84,20 +76,8 @@ export default function POSBays() {
     setActiveBay(null);
     setShowForm(false);
     setShowTender(false);
-    setCustomerInfo({
-      name: "",
-      vehicle: "",
-      plate: "",
-      service: "",
-      servicePrice: 0,
-      employee: "",
-    });
     setAmountReceived("");
     setChange(0);
-  }
-
-  function handleNewTransaction() {
-    setShowForm(true);
   }
 
   async function saveCustomerInfo() {
@@ -111,17 +91,13 @@ export default function POSBays() {
         servicePrice: customerInfo.servicePrice,
         employeeName: customerInfo.employee,
       });
-      toast.success(`✅ Transaction started for Bay ${activeBay.bayName}`);
+      toast.success(`🚗 Transaction started for ${activeBay.bayName}`);
       closeModal();
-    } catch (error) {
+    } catch {
       toast.error("❌ Failed to save transaction");
     } finally {
       setSaving(false);
     }
-  }
-
-  function handleFinishTransaction() {
-    setShowTender(true);
   }
 
   async function confirmFinish() {
@@ -129,7 +105,6 @@ export default function POSBays() {
       setFinishing(true);
       const companyShare = customerInfo.servicePrice * 0.7;
       const employeeShare = customerInfo.servicePrice * 0.3;
-
       await finishTransaction(activeBay.docId, {
         amountReceived: Number(amountReceived),
         change: Number(change),
@@ -137,10 +112,9 @@ export default function POSBays() {
         employeeShare,
         paymentMethod: "cash",
       });
-
-      toast.success(`💰 Transaction finished for Bay ${activeBay.bayName}`);
+      toast.success(`💰 Bay ${activeBay.bayName} transaction finished`);
       closeModal();
-    } catch (error) {
+    } catch {
       toast.error("❌ Failed to finish transaction");
     } finally {
       setFinishing(false);
@@ -151,13 +125,13 @@ export default function POSBays() {
     try {
       setReserving(true);
       await toggleReserve(activeBay.docId);
-      if (activeBay.status === "reserved") {
-        toast(`🔓 Bay ${activeBay.bayName} unreserved`, { icon: "🔓" });
-      } else {
-        toast(`⭐ Bay ${activeBay.bayName} reserved`, { icon: "⭐" });
-      }
+      toast.success(
+        activeBay.status === "reserved"
+          ? `🔓 Bay ${activeBay.bayName} unreserved`
+          : `⭐ Bay ${activeBay.bayName} reserved`
+      );
       closeModal();
-    } catch (error) {
+    } catch {
       toast.error("❌ Failed to update reservation");
     } finally {
       setReserving(false);
@@ -170,84 +144,99 @@ export default function POSBays() {
     setChange(value - customerInfo.servicePrice);
   }
 
+  async function handleAddBay() {
+    const name = prompt("Enter new Bay name:");
+    if (!name) return;
+    try {
+      setAddingBay(true);
+      await addBay(name);
+      toast.success(`✅ Bay "${name}" added successfully!`);
+    } catch {
+      toast.error("❌ Failed to add bay");
+    } finally {
+      setAddingBay(false);
+    }
+  }
+
   return (
-    <div className="p-1 space-y-2">
-      {/* 🔹 Summary Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-        {/* <div className="p-4 rounded-xl bg-blue-100 text-blue-800 shadow">
-          <p className="text-sm opacity-80">Total Transactions</p>
-          <p className="text-2xl font-bold">{totalTransactions}</p>
+    <div className="p-4">
+      {/* 🔹 Dashboard Header */}
+      <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="stat bg-success text-success-content rounded-2xl">
+          <div className="stat-title">Available Bays</div>
+          <div className="stat-value">{totalAvailable}</div>
         </div>
-        <div className="p-4 rounded-xl bg-green-100 text-green-800 shadow">
-          <p className="text-sm opacity-80">Total Sales</p>
-          <p className="text-2xl font-bold">₱{totalAmount}</p>
-        </div> */}
-        <div className="p-4 rounded-xl bg-yellow-100 text-yellow-800 shadow">
-          <p className="text-sm opacity-80">Available</p>
-          <p className="text-2xl font-bold">{totalAvailable}</p>
+        <div className="stat bg-warning text-warning-content rounded-2xl">
+          <div className="stat-title">Reserved</div>
+          <div className="stat-value">{totalReserved}</div>
         </div>
-        <div className="p-4 rounded-xl bg-yellow-100 text-yellow-800 shadow">
-          <p className="text-sm opacity-80">Reserved</p>
-          <p className="text-2xl font-bold">{totalReserved}</p>
-        </div>
-        <div className="p-4 rounded-xl bg-red-100 text-red-800 shadow">
-          <p className="text-sm opacity-80">Occupied</p>
-          <p className="text-2xl font-bold">{totalOccupied}</p>
+        <div className="stat bg-error text-error-content rounded-2xl">
+          <div className="stat-title">Occupied</div>
+          <div className="stat-value">{totalOccupied}</div>
         </div>
       </div>
 
-      {/* 🔹 Grid of Bays */}
-      <h1 className="text-xl font-bold">Your Bays</h1>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full mt-2">
-        {bays.map((bay) => (
-          <button
-            key={bay.$id}
-            onClick={() => handleOpen(bay)}
-            className={`p-6 rounded-2xl shadow text-center cursor-pointer transition transform hover:scale-105 
-              ${
-                bay.status === "available"
-                  ? "bg-green-100 text-green-800"
-                  : bay.status === "occupied"
-                  ? "bg-red-100 text-red-800"
-                  : "bg-yellow-100 text-yellow-800"
-              }`}
+      {/* 🔹 Bay Grid or Empty State */}
+      <h1 className="text-xl font-bold mb-3">Active Bays</h1>
+      {bays.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 bg-base-200 rounded-2xl border border-dashed">
+          <p className="text-lg opacity-70 mb-4 text-center">
+            🚫 No Bays Found. <br />
+            Add a new bay in the settings section to get started.
+          </p>
+          {/* <button
+            onClick={handleAddBay}
+            disabled={addingBay}
+            className="btn btn-primary"
           >
-            <p className="text-lg font-bold">{bay.bayName}</p>
-            <span
-              className={`mt-2 inline-block px-3 py-1 rounded-full text-sm font-medium 
+            {addingBay ? "⏳ Adding..." : "➕ Add New Bay"}
+          </button> */}
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+          {bays.map((bay) => (
+            <div
+              key={bay.$id}
+              onClick={() => handleOpen(bay)}
+              className={`p-6 rounded-2xl shadow-lg cursor-pointer transition-all hover:scale-105 hover:shadow-xl border
                 ${
                   bay.status === "available"
-                    ? "bg-green-200"
+                    ? "bg-success/10 border-success text-success"
                     : bay.status === "occupied"
-                    ? "bg-red-200"
-                    : "bg-yellow-200"
+                    ? "bg-error/10 border-error text-error"
+                    : "bg-warning/10 border-warning text-warning"
                 }`}
             >
-              {bay.status.charAt(0).toUpperCase() + bay.status.slice(1)}
-            </span>
-            {bay.customerName && (
-              <p className="mt-2 text-xs font-medium opacity-90 text-center">
-                {bay.customerName} ({bay.customerPlateNumber})
-              </p>
-            )}
-          </button>
-        ))}
-      </div>
+              <h2 className="text-lg font-bold">{bay.bayName}</h2>
+              <p className="text-sm opacity-70 mt-1 capitalize">{bay.status}</p>
+              {bay.customerName && (
+                <p className="mt-2 text-sm">
+                  {bay.customerName} ({bay.customerPlateNumber})
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
-      {/* 🔹 Modal */}
+      {/* 🔹 Modern Modal */}
       <dialog id="posModal" className="modal">
-        <div className="modal-box max-w-lg rounded-2xl shadow-xl">
+        <div className="modal-box max-w-md bg-base-100 rounded-2xl">
           {activeBay && (
             <>
-              {/* Header */}
               <div className="flex justify-between items-center mb-4">
-                <h2 className="font-bold text-lg">{activeBay.bayName}</h2>
+                <h3 className="text-xl font-bold">
+                  {activeBay.bayName}{" "}
+                  <span className="text-sm font-normal opacity-60">
+                    ({activeBay.status})
+                  </span>
+                </h3>
                 <button onClick={closeModal} className="btn btn-sm btn-circle">
                   ✕
                 </button>
               </div>
 
-              {/* Customer Form */}
+              {/* Transaction and Tender UI */}
               {showForm && (
                 <div className="space-y-3">
                   <input
@@ -261,7 +250,7 @@ export default function POSBays() {
                   />
                   <input
                     type="text"
-                    placeholder="Plate No."
+                    placeholder="Plate Number"
                     className="input input-bordered w-full"
                     value={customerInfo.plate}
                     onChange={(e) =>
@@ -273,7 +262,7 @@ export default function POSBays() {
                   />
                   <input
                     type="text"
-                    placeholder="Vehicle"
+                    placeholder="Vehicle Type"
                     className="input input-bordered w-full"
                     value={customerInfo.vehicle}
                     onChange={(e) =>
@@ -288,7 +277,6 @@ export default function POSBays() {
                     customerInfo={customerInfo}
                     setCustomerInfo={setCustomerInfo}
                   />
-
                   <EmployeeSelect
                     customerInfo={customerInfo}
                     setCustomerInfo={setCustomerInfo}
@@ -299,40 +287,18 @@ export default function POSBays() {
                     disabled={saving}
                     className="btn btn-success w-full mt-2"
                   >
-                    {saving ? "💾 Saving..." : "💾 Save Transaction"}
+                    {saving ? "💾 Saving..." : "💾 Start Transaction"}
                   </button>
                 </div>
               )}
 
-              {/* Tender Form */}
               {showTender && (
-                <div className="space-y-4">
-                  <p className="font-semibold text-lg">
-                    Total: ₱{customerInfo.servicePrice}
-                  </p>
-
-                  {/* <div>
-                    <label className="block font-medium mb-1">
-                      Assign Carwash Boy
-                    </label>
-                    <select
-                      className="select select-bordered w-full"
-                      value={customerInfo.employee || ""}
-                      onChange={(e) =>
-                        setCustomerInfo({
-                          ...customerInfo,
-                          employee: e.target.value,
-                        })
-                      }
-                    >
-                      <option value="" disabled>
-                        -- Select Employee --
-                      </option>
-                      <option value="Juan">Juan</option>
-                      <option value="Pedro">Pedro</option>
-                      <option value="Maria">Maria</option>
-                    </select>
-                  </div> */}
+                <div className="space-y-3">
+                  <div className="text-center">
+                    <p className="text-lg font-semibold">
+                      Total: ₱{customerInfo.servicePrice.toFixed(2)}
+                    </p>
+                  </div>
 
                   <input
                     type="number"
@@ -341,53 +307,51 @@ export default function POSBays() {
                     value={amountReceived}
                     onChange={handleAmountChange}
                   />
-
-                  <p className="font-semibold text-lg">
-                    Change: ₱
+                  <p className="text-lg font-bold">
+                    Change:{" "}
                     <span
-                      className={`font-bold ${
-                        change < 0 ? "text-red-500" : "text-green-600"
+                      className={`${
+                        change < 0 ? "text-error" : "text-success"
                       }`}
                     >
-                      {change}
+                      ₱{change.toFixed(2)}
                     </span>
                   </p>
 
-                  <div className="p-3 rounded-lg bg-base-200">
+                  <div className="p-3 bg-base-200 rounded-xl text-sm">
                     <p>
-                      Company Share (70%): ₱
+                      Company Share: ₱
                       {(customerInfo.servicePrice * 0.7).toFixed(2)}
                     </p>
                     <p>
-                      {customerInfo.employee || "Employee"} Share (30%): ₱
+                      Employee Share: ₱
                       {(customerInfo.servicePrice * 0.3).toFixed(2)}
                     </p>
                   </div>
 
                   <button
                     disabled={change < 0}
-                    onClick={() => confirmFinish(customerInfo)}
-                    className="btn btn-primary w-full mt-2"
+                    onClick={confirmFinish}
+                    className="btn btn-primary w-full"
                   >
                     {finishing ? "⏳ Finishing..." : "✅ Confirm & Finish"}
                   </button>
                 </div>
               )}
 
-              {/* Action Buttons */}
               {!showForm && !showTender && (
-                <div className="space-y-3">
+                <div className="flex flex-col gap-3">
                   {activeBay.status === "available" && (
                     <button
-                      onClick={handleNewTransaction}
+                      onClick={() => setShowForm(true)}
                       className="btn btn-success w-full"
                     >
-                      ➕ New Transaction
+                      ➕ Start Transaction
                     </button>
                   )}
                   {activeBay.status === "occupied" && (
                     <button
-                      onClick={handleFinishTransaction}
+                      onClick={() => setShowTender(true)}
                       className="btn btn-error w-full"
                     >
                       ✅ Finish Transaction
@@ -401,8 +365,8 @@ export default function POSBays() {
                     {reserving
                       ? "⏳ Updating..."
                       : activeBay.status === "reserved"
-                      ? "🔓 Unreserve"
-                      : "⭐ Reserve"}
+                      ? "🔓 Unreserve Bay"
+                      : "⭐ Reserve Bay"}
                   </button>
                 </div>
               )}
