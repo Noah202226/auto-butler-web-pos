@@ -52,26 +52,51 @@ export default function SettingsLayout() {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 mt-6 animate-fade-up">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Settings</h2>
+    <div className="bg-base-100 text-base-content rounded-2xl shadow-lg border border-base-300 p-3 sm:p-4 animate-fade-up">
+      <h2 className="text-2xl font-bold text-base-content mb-6">Settings</h2>
 
       {/* Tabs */}
-      <div className="flex overflow-x-auto gap-6 border-b pb-2 mb-6 text-sm font-medium text-gray-500">
-        {["personalization", "products", "bays", "employees", "services"].map(
-          (tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`capitalize transition-all pb-2 px-1 ${
-                activeTab === tab
-                  ? "text-blue-600 border-b-2 border-blue-500"
-                  : "hover:text-gray-700"
-              }`}
-            >
-              {tab}
-            </button>
-          )
-        )}
+      {/* Tabs */}
+      <div className="border-b pb-2 mb-6">
+        {/* Desktop Tabs */}
+        <div className="hidden sm:flex gap-6 text-sm font-medium text-gray-500">
+          {["personalization", "products", "bays", "employees", "services"].map(
+            (tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`capitalize transition-all pb-2 px-1 ${
+                  activeTab === tab
+                    ? "text-blue-600 border-b-2 border-blue-500"
+                    : "hover:text-gray-700"
+                }`}
+              >
+                {tab}
+              </button>
+            )
+          )}
+        </div>
+
+        {/* Mobile Dropdown */}
+        <div className="sm:hidden relative w-full">
+          <select
+            value={activeTab}
+            onChange={(e) => setActiveTab(e.target.value)}
+            className="w-full border border-gray-200 rounded-lg p-2 bg-white text-gray-700 focus:ring-2 focus:ring-blue-500"
+          >
+            {[
+              "personalization",
+              "products",
+              "bays",
+              "employees",
+              "services",
+            ].map((tab) => (
+              <option key={tab} value={tab}>
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Content */}
@@ -82,7 +107,7 @@ export default function SettingsLayout() {
         {/* PERSONALIZATION */}
         {activeTab === "personalization" && (
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-gray-800">
+            <h2 className="text-lg font-semibold text-base-content">
               General Settings
             </h2>
 
@@ -139,7 +164,9 @@ export default function SettingsLayout() {
         {activeTab === "products" && (
           <div className="space-y-5">
             <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-gray-800">Products</h3>
+              <h3 className="text-lg font-semibold text-base-content">
+                Products
+              </h3>
               <AddProductModal />
             </div>
 
@@ -202,7 +229,7 @@ export default function SettingsLayout() {
                   className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm flex justify-between items-center"
                 >
                   <div>
-                    <p className="font-semibold text-gray-800">
+                    <p className="font-semibold text-base-content">
                       {p.productName}
                     </p>
                     <p className="text-xs text-gray-500">{p.category}</p>
@@ -229,7 +256,7 @@ export default function SettingsLayout() {
         {activeTab === "bays" && (
           <div className="space-y-5">
             <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-gray-800">Bays</h3>
+              <h3 className="text-lg font-semibold text-base-content">Bays</h3>
               <AddBayModal />
             </div>
 
@@ -275,7 +302,9 @@ export default function SettingsLayout() {
                   className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm flex justify-between items-center"
                 >
                   <div>
-                    <p className="font-semibold text-gray-800">{b.bayName}</p>
+                    <p className="font-semibold text-base-content">
+                      {b.bayName}
+                    </p>
                     <p className="text-xs text-gray-500">
                       {new Date(b.$createdAt).toLocaleDateString()}
                     </p>
@@ -296,7 +325,9 @@ export default function SettingsLayout() {
         {activeTab === "services" && (
           <div className="space-y-5">
             <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-gray-800">Services</h3>
+              <h3 className="text-lg font-semibold text-base-content">
+                Services
+              </h3>
               <AddServiceModal />
             </div>
             <div className="overflow-x-auto border border-gray-100 rounded-lg">
@@ -365,7 +396,9 @@ export default function SettingsLayout() {
         {activeTab === "employees" && (
           <div className="space-y-5">
             <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-gray-800">Employees</h3>
+              <h3 className="text-lg font-semibold text-base-content">
+                Employees
+              </h3>
               <AddEmployeeModal />
             </div>
             <EmployeeList />

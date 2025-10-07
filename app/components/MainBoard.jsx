@@ -48,7 +48,7 @@ export default function Layout() {
               <Menu size={20} />
             </button>
             <div className="md:hidden font-bold text-lg">
-              {businessName || "Company Name"}
+              {businessName + "test" || "Company Name"}
             </div>
           </div>
 
@@ -75,9 +75,9 @@ export default function Layout() {
           <div className="flex items-center gap-2">
             {/* Buttons (Desktop) */}
             <div className="hidden md:flex gap-2">
-              <button className="btn btn-primary btn-sm shadow-md hover:shadow-lg transition-all">
+              {/* <button className="btn btn-primary btn-sm shadow-md hover:shadow-lg transition-all">
                 + New Wash
-              </button>
+              </button> */}
               <button
                 className="btn btn-secondary btn-sm shadow-md hover:shadow-lg transition-all"
                 onClick={() =>
@@ -160,9 +160,9 @@ export default function Layout() {
         <div className="relative flex flex-col items-end">
           {fabOpen && (
             <div className="mb-2 space-y-2">
-              <button className="btn btn-primary btn-sm w-32 flex items-center justify-start gap-2 shadow-md">
+              {/* <button className="btn btn-primary btn-sm w-32 flex items-center justify-start gap-2 shadow-md">
                 <Car size={16} /> New Wash
-              </button>
+              </button> */}
               <button
                 onClick={() =>
                   document.getElementById("expense_modal").showModal()

@@ -161,7 +161,7 @@ export default function POSBays() {
   return (
     <div className="p-4">
       {/* 🔹 Dashboard Header */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="stat bg-success text-success-content rounded-2xl">
           <div className="stat-title">Available Bays</div>
           <div className="stat-value">{totalAvailable}</div>
@@ -193,7 +193,7 @@ export default function POSBays() {
           </button> */}
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-5">
           {bays.map((bay) => (
             <div
               key={bay.$id}

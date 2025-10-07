@@ -8,9 +8,11 @@ import {
   Phone,
 } from "lucide-react";
 import { useUIStore } from "../stores/useUIStore";
+import { useSettingsStore } from "../stores/useSettingsStore";
 
 export default function Sidebar() {
   const { activeTab, setActiveTab, sidebarOpen, closeSidebar } = useUIStore();
+  const { businessName, initial } = useSettingsStore;
 
   const navItems = [
     { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -30,10 +32,10 @@ export default function Sidebar() {
       <div className="flex items-center justify-between p-4 border-b border-base-300">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 flex items-center justify-center rounded-2xl bg-primary text-primary-content font-bold shadow-md">
-            CW
+            {initial}
           </div>
           <span className="font-bold text-lg text-base-content">
-            Auto Butler
+            {businessName}
           </span>
         </div>
         <button

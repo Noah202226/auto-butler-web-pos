@@ -159,11 +159,11 @@ export default function TransactionsReports() {
   };
 
   return (
-    <div className="bg-base-100 text-base-content rounded-2xl shadow-lg border border-base-300 p-2">
+    <div className="bg-base-100 text-base-content rounded-2xl shadow-lg border border-base-300 p-3 sm:p-4">
       {/* Tabs */}
-      <div className="tabs mb-2">
+      <div className="tabs mb-3 overflow-x-auto">
         <a
-          className={`tab tab-bordered mx-5 ${
+          className={`tab tab-bordered sm:mx-5 ${
             activeTab === "sales" ? "tab-active font-semibold" : ""
           }`}
           onClick={() => setActiveTab("sales")}
@@ -181,14 +181,14 @@ export default function TransactionsReports() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-end gap-4 bg-base-200 p-4 rounded-xl mb-6 border border-base-300">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 bg-base-200 p-4 rounded-xl mb-6 border border-base-300">
         <div>
           <label className="label-text font-medium mb-1 block">From</label>
           <input
             type="date"
             value={dateFrom}
             onChange={(e) => setDateFrom(e.target.value)}
-            className="input input-bordered input-sm w-44"
+            className="input input-bordered input-sm w-full"
           />
         </div>
         <div>
@@ -197,7 +197,7 @@ export default function TransactionsReports() {
             type="date"
             value={dateTo}
             onChange={(e) => setDateTo(e.target.value)}
-            className="input input-bordered input-sm w-44"
+            className="input input-bordered input-sm w-full"
           />
         </div>
         {activeTab === "sales" && (
@@ -208,7 +208,7 @@ export default function TransactionsReports() {
             <select
               value={employeeFilter}
               onChange={(e) => setEmployeeFilter(e.target.value)}
-              className="select select-bordered select-sm w-52"
+              className="select select-bordered select-sm w-full"
             >
               <option value="">All</option>
               {[...new Set(sales.map((s) => s.employeeName))].map((emp) => (
@@ -217,52 +217,52 @@ export default function TransactionsReports() {
             </select>
           </div>
         )}
-        <button
-          onClick={downloadPDF}
-          disabled={actionLoading || loading}
-          className="btn btn-primary btn-sm ml-auto"
-        >
-          {actionLoading ? (
-            <span className="loading loading-spinner loading-xs"></span>
-          ) : (
-            "📄 Download PDF"
-          )}
-        </button>
+        <div className="flex items-end">
+          <button
+            onClick={downloadPDF}
+            disabled={actionLoading || loading}
+            className="btn btn-primary btn-sm w-full"
+          >
+            {actionLoading ? (
+              <span className="loading loading-spinner loading-xs"></span>
+            ) : (
+              "📄 Download PDF"
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Summary */}
-      <div className="overflow-x-auto pb-2">
-        <div className="flex gap-4 min-w-max">
-          {[
-            { title: "Total Sales", value: totalSales, color: "text-primary" },
-            {
-              title: "Total Expenses",
-              value: totalExpenses,
-              color: "text-error",
-            },
-            { title: "Net Profit", value: netProfit, color: "text-success" },
-            {
-              title: "Employee Share",
-              value: totalEmployeeShare,
-              color: "text-info",
-            },
-            {
-              title: "Company Share",
-              value: totalCompanyShare,
-              color: "text-secondary",
-            },
-          ].map((stat) => (
-            <div
-              key={stat.title}
-              className="stat bg-base-200 rounded-xl px-4 min-w-[180px]"
-            >
-              <div className="stat-title text-sm">{stat.title}</div>
-              <div className={`stat-value ${stat.color}`}>
-                ₱{stat.value.toLocaleString()}
-              </div>
-            </div>
-          ))}
-        </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
+        {[
+          { title: "Total Sales", value: totalSales, color: "text-primary" },
+          {
+            title: "Total Expenses",
+            value: totalExpenses,
+            color: "text-error",
+          },
+          { title: "Net Profit", value: netProfit, color: "text-success" },
+          {
+            title: "Employee Share",
+            value: totalEmployeeShare,
+            color: "text-info",
+          },
+          {
+            title: "Company Share",
+            value: totalCompanyShare,
+            color: "text-secondary",
+          },
+        ].map((stat) => (
+          <div
+            key={stat.title}
+            className="bg-base-200 rounded-xl p-3 text-center border border-base-300"
+          >
+            <p className="text-sm text-base-content/70">{stat.title}</p>
+            <h3 className={`text-lg font-bold ${stat.color}`}>
+              ₱{stat.value.toLocaleString()}
+            </h3>
+          </div>
+        ))}
       </div>
 
       {/* Data Display */}
@@ -272,46 +272,156 @@ export default function TransactionsReports() {
         </div>
       ) : activeTab === "sales" ? (
         filteredSales.length ? (
-          <div className="overflow-x-auto mt-6">
+          <>
+            {/* Table for desktop */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="table table-zebra w-full text-sm">
+                <thead>
+                  <tr className="text-base-content/80">
+                    <th>Customer</th>
+                    <th>Vehicle</th>
+                    <th>Service</th>
+                    <th>Employee</th>
+                    <th>Employee Share</th>
+                    <th>Company Share</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredSales.map((e) => (
+                    <tr key={e.$id}>
+                      <td>{e.customerName}</td>
+                      <td>{e.vehicle}</td>
+                      <td>{e.service}</td>
+                      <td>{e.employeeName}</td>
+                      <td>₱{e.employeeShare}</td>
+                      <td>₱{e.companyShare}</td>
+                      <td>{e.status}</td>
+                      <td>{new Date(e.$createdAt).toLocaleDateString()}</td>
+                      <td>
+                        <button
+                          disabled={actionLoading}
+                          onClick={() => {
+                            setConfirmMessage(
+                              `Delete sale record for ${e.customerName}?`
+                            );
+                            setConfirmAction(() => async () => {
+                              try {
+                                setActionLoading(true);
+                                await deleteSale(e.$id);
+                                toast.success("Sale deleted");
+                              } catch {
+                                toast.error("Failed to delete sale");
+                              } finally {
+                                setActionLoading(false);
+                              }
+                            });
+                            setConfirmOpen(true);
+                          }}
+                          className="btn btn-error btn-xs"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile cards */}
+            <div className="sm:hidden flex flex-col gap-3">
+              {filteredSales.map((s) => (
+                <div
+                  key={s.$id}
+                  className="bg-base-200 rounded-lg p-4 border border-base-300"
+                >
+                  <div className="flex justify-between">
+                    <p className="font-semibold">{s.customerName}</p>
+                    <p className="text-xs text-gray-400">{s.status}</p>
+                  </div>
+                  <p className="text-sm text-gray-400">{s.vehicle}</p>
+                  <p className="text-sm">{s.service}</p>
+                  <p className="text-xs text-gray-500">
+                    Employee:{" "}
+                    <span className="text-gray-300">{s.employeeName}</span>
+                  </p>
+                  <div className="flex justify-between text-sm pt-2">
+                    <span className="text-blue-400 font-medium">
+                      ₱{s.employeeShare}
+                    </span>
+                    <span className="text-pink-400 font-medium">
+                      ₱{s.companyShare}
+                    </span>
+                  </div>
+                  <div className="text-right pt-2">
+                    <button
+                      disabled={actionLoading}
+                      onClick={() => {
+                        setConfirmMessage(
+                          `Delete sale record for ${s.customerName}?`
+                        );
+                        setConfirmAction(() => async () => {
+                          try {
+                            setActionLoading(true);
+                            await deleteSale(s.$id);
+                            toast.success("Sale deleted");
+                          } catch {
+                            toast.error("Failed to delete sale");
+                          } finally {
+                            setActionLoading(false);
+                          }
+                        });
+                        setConfirmOpen(true);
+                      }}
+                      className="btn btn-xs btn-error"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <p className="text-center text-base-content/60 mt-6">
+            No sales records found.
+          </p>
+        )
+      ) : filteredExpenses.length ? (
+        <>
+          <div className="hidden sm:block overflow-x-auto">
             <table className="table table-zebra w-full text-sm">
               <thead>
                 <tr className="text-base-content/80">
-                  <th>Customer</th>
-                  <th>Vehicle</th>
-                  <th>Service</th>
-                  <th>Employee</th>
-                  <th>Employee Share</th>
-                  <th>Company Share</th>
-                  <th>Status</th>
+                  <th>Category</th>
+                  <th>Note</th>
+                  <th>Amount</th>
                   <th>Date</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody>
-                {filteredSales.map((e) => (
+                {filteredExpenses.map((e) => (
                   <tr key={e.$id}>
-                    <td>{e.customerName}</td>
-                    <td>{e.vehicle}</td>
-                    <td>{e.service}</td>
-                    <td>{e.employeeName}</td>
-                    <td>₱{e.employeeShare}</td>
-                    <td>₱{e.companyShare}</td>
-                    <td>{e.status}</td>
+                    <td>{e.category}</td>
+                    <td>{e.note}</td>
+                    <td>₱{e.amount.toLocaleString()}</td>
                     <td>{new Date(e.$createdAt).toLocaleDateString()}</td>
                     <td>
                       <button
                         disabled={actionLoading}
                         onClick={() => {
-                          setConfirmMessage(
-                            `Delete sale record for ${e.customerName}?`
-                          );
+                          setConfirmMessage(`Delete expense: ${e.category}?`);
                           setConfirmAction(() => async () => {
                             try {
                               setActionLoading(true);
-                              await deleteSale(e.$id);
-                              toast.success("Sale deleted");
+                              await deleteExpense(e.$id);
+                              toast.success("Expense deleted");
                             } catch {
-                              toast.error("Failed to delete sale");
+                              toast.error("Failed to delete expense");
                             } finally {
                               setActionLoading(false);
                             }
@@ -328,58 +438,51 @@ export default function TransactionsReports() {
               </tbody>
             </table>
           </div>
-        ) : (
-          <p className="text-center text-base-content/60 mt-6">
-            No sales records found.
-          </p>
-        )
-      ) : filteredExpenses.length ? (
-        <div className="overflow-x-auto mt-6">
-          <table className="table table-zebra w-full text-sm">
-            <thead>
-              <tr className="text-base-content/80">
-                <th>Category</th>
-                <th>Note</th>
-                <th>Amount</th>
-                <th>Date</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredExpenses.map((e) => (
-                <tr key={e.$id}>
-                  <td>{e.category}</td>
-                  <td>{e.note}</td>
-                  <td>₱{e.amount.toLocaleString()}</td>
-                  <td>{new Date(e.$createdAt).toLocaleDateString()}</td>
-                  <td>
-                    <button
-                      disabled={actionLoading}
-                      onClick={() => {
-                        setConfirmMessage(`Delete expense: ${e.category}?`);
-                        setConfirmAction(() => async () => {
-                          try {
-                            setActionLoading(true);
-                            await deleteExpense(e.$id);
-                            toast.success("Expense deleted");
-                          } catch {
-                            toast.error("Failed to delete expense");
-                          } finally {
-                            setActionLoading(false);
-                          }
-                        });
-                        setConfirmOpen(true);
-                      }}
-                      className="btn btn-error btn-xs"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+
+          {/* Mobile expense cards */}
+          <div className="sm:hidden flex flex-col gap-3">
+            {filteredExpenses.map((e) => (
+              <div
+                key={e.$id}
+                className="bg-base-200 rounded-lg p-4 border border-base-300"
+              >
+                <div className="flex justify-between">
+                  <p className="font-semibold">{e.category}</p>
+                  <p className="text-xs text-gray-400">
+                    {new Date(e.$createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <p className="text-sm text-gray-400">{e.note}</p>
+                <p className="text-lg font-bold text-error mt-2">
+                  ₱{e.amount.toLocaleString()}
+                </p>
+                <div className="text-right pt-2">
+                  <button
+                    disabled={actionLoading}
+                    onClick={() => {
+                      setConfirmMessage(`Delete expense: ${e.category}?`);
+                      setConfirmAction(() => async () => {
+                        try {
+                          setActionLoading(true);
+                          await deleteExpense(e.$id);
+                          toast.success("Expense deleted");
+                        } catch {
+                          toast.error("Failed to delete expense");
+                        } finally {
+                          setActionLoading(false);
+                        }
+                      });
+                      setConfirmOpen(true);
+                    }}
+                    className="btn btn-xs btn-error"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       ) : (
         <p className="text-center text-base-content/60 mt-6">
           No expense records found.
