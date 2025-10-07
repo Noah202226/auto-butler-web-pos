@@ -1,44 +1,43 @@
 "use client";
 
 import { useState } from "react";
-import { useEmployeeStore } from "@/store/employeeStore";
+import { useEmployeeStore } from "../../stores/useEmployeeStore";
 
 export default function AddEmployeeModal() {
   const { addEmployee } = useEmployeeStore();
   const [isOpen, setIsOpen] = useState(false);
-  const [form, setForm] = useState({
-    name: "",
-    position: "",
-    phone: "",
-    email: "",
-  });
+  const [form, setForm] = useState({ name: "" });
 
   const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     await addEmployee(form);
-    setForm({ name: "", position: "", phone: "", email: "" });
+    setForm({ name: "" });
     setIsOpen(false);
   };
 
   return (
     <>
+      {/* Trigger Button */}
       <button className="btn btn-primary mb-4" onClick={() => setIsOpen(true)}>
         ➕ Add Employee
       </button>
 
+      {/* Modal Overlay */}
       {isOpen && (
-        <dialog open className="modal">
-          <div className="modal-box w-11/12 max-w-lg">
-            <h3 className="font-bold text-lg mb-4">Add New Employee</h3>
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          style={{ position: "fixed" }}
+        >
+          <div className="bg-base-100 rounded-xl shadow-2xl w-11/12 max-w-md p-6 relative">
+            <h3 className="text-lg font-semibold mb-4 text-gray-800">
+              Add New Employee
+            </h3>
 
-            <form onSubmit={handleSubmit} className="grid gap-3">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <input
                 type="text"
                 name="name"
@@ -49,49 +48,21 @@ export default function AddEmployeeModal() {
                 required
               />
 
-              <input
-                type="text"
-                name="position"
-                placeholder="Position"
-                className="input input-bordered w-full"
-                value={form.position}
-                onChange={handleChange}
-                required
-              />
-
-              <input
-                type="tel"
-                name="phone"
-                placeholder="Phone"
-                className="input input-bordered w-full"
-                value={form.phone}
-                onChange={handleChange}
-              />
-
-              <input
-                type="email"
-                name="email"
-                placeholder="Email"
-                className="input input-bordered w-full"
-                value={form.email}
-                onChange={handleChange}
-              />
-
-              <div className="modal-action">
-                <button type="submit" className="btn btn-success">
-                  Save
-                </button>
+              <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
-                  className="btn"
+                  className="btn btn-ghost"
                   onClick={() => setIsOpen(false)}
                 >
                   Cancel
                 </button>
+                <button type="submit" className="btn btn-success">
+                  Save
+                </button>
               </div>
             </form>
           </div>
-        </dialog>
+        </div>
       )}
     </>
   );

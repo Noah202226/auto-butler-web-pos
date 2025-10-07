@@ -1,69 +1,99 @@
 "use client";
 
-import { useEffect } from "react";
 import { useEmployeeStore } from "../../stores/useEmployeeStore";
+import { useState, useEffect } from "react";
+import AddEmployeeModal from "../Helpers/AddEmployeeModal";
+import { Trash2, Loader2 } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function EmployeeList() {
-  const { employees, fetchEmployees, removeEmployee, loading, error } =
+  const { employees, fetchEmployees, removeEmployee, deletingId } =
     useEmployeeStore();
+  const [confirmId, setConfirmId] = useState(null);
 
   useEffect(() => {
     fetchEmployees();
-  }, [fetchEmployees]);
+  }, []);
 
-  if (loading)
-    return (
-      <p className="p-6 text-gray-500 animate-fade-in">Loading employees...</p>
-    );
-  if (error)
-    return (
-      <p className="p-6 text-red-500 animate-fade-in">
-        Error loading employees: {error}
-      </p>
-    );
-
-  if (!employees.length) {
-    return (
-      <div className="text-center py-12 text-gray-400 animate-fade-in">
-        No employees found.
-      </div>
-    );
-  }
+  const handleDelete = async (id, name) => {
+    try {
+      await removeEmployee(id);
+      toast.success(`${name} removed successfully`);
+    } catch {
+      toast.error("Failed to delete employee");
+    } finally {
+      setConfirmId(null);
+    }
+  };
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-up">
-      {employees.map((emp) => (
-        <div
-          key={emp.$id}
-          className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 p-5"
-        >
-          <h2 className="font-semibold text-gray-800 text-lg">{emp.name}</h2>
-          <p className="text-xs text-gray-400 mt-1">
-            Hired: {new Date(emp.$createdAt).toLocaleDateString()}
-          </p>
-
-          {emp.position && (
-            <p className="text-sm text-gray-600 mt-2">
-              Position: {emp.position}
-            </p>
-          )}
-          {emp.email && (
-            <p className="text-sm text-gray-600">Email: {emp.email}</p>
-          )}
-          {emp.phone && (
-            <p className="text-sm text-gray-600">Phone: {emp.phone}</p>
-          )}
-
-          <div className="flex justify-end mt-4">
-            <button
-              onClick={() => removeEmployee(emp.$id)}
-              className="text-sm bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded-lg transition-all"
-            >
-              Delete
-            </button>
-          </div>
-        </div>
-      ))}
+    <div className="space-y-5">
+      <div className="overflow-x-auto border border-gray-100 rounded-lg">
+        <table className="w-full text-sm text-gray-700">
+          <thead className="bg-gray-50 text-gray-600">
+            <tr>
+              <th className="px-4 py-2 text-left">Name</th>
+              <th className="px-4 py-2 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {employees.length > 0 ? (
+              employees.map((emp) => (
+                <tr
+                  key={emp.$id}
+                  className="border-t hover:bg-gray-50 transition"
+                >
+                  <td className="px-4 py-2">{emp.name}</td>
+                  <td className="px-4 py-2 text-right">
+                    {confirmId === emp.$id ? (
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={() => handleDelete(emp.$id, emp.name)}
+                          className="btn btn-error btn-xs text-white"
+                          disabled={deletingId === emp.$id}
+                        >
+                          {deletingId === emp.$id ? (
+                            <>
+                              <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                              Deleting...
+                            </>
+                          ) : (
+                            "Confirm"
+                          )}
+                        </button>
+                        <button
+                          className="btn btn-ghost btn-xs"
+                          onClick={() => setConfirmId(null)}
+                          disabled={deletingId === emp.$id}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setConfirmId(emp.$id)}
+                        className="btn btn-error btn-xs text-white gap-1"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Delete
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan={2}
+                  className="text-center text-gray-400 py-4 italic"
+                >
+                  No employees found.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

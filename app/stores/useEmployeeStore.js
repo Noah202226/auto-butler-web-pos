@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import { databases, ID } from "../lib/appwrite";
 import { Query } from "appwrite";
+import toast from "react-hot-toast";
 
 const DATABASE_ID = "68dd10f9001a68982ac8";
 const EMPLOYEES_COLLECTION_ID = "employees";
@@ -42,6 +43,7 @@ export const useEmployeeStore = create((set, get) => ({
       set((state) => ({
         employees: [...state.employees, doc],
       }));
+      toast.success("New employee added.");
     } catch (error) {
       console.error("❌ Error adding employee:", error);
       set({ error: "Failed to add employee" });

@@ -11,6 +11,9 @@ import { useEmployeeStore } from "../../stores/useEmployeeStore";
 import AddProductModal from "../Helpers/AddProductModal";
 import AddBayModal from "../Helpers/AddBayModal";
 import EmployeeList from "./EmployeeList";
+import AddEmployeeModal from "../Helpers/AddEmployeeModal";
+import AddServiceModal from "../Helpers/AddServiceModal";
+import { databases } from "@/app/lib/appwrite";
 
 export default function SettingsLayout() {
   const [activeTab, setActiveTab] = useState("personalization");
@@ -83,7 +86,6 @@ export default function SettingsLayout() {
               General Settings
             </h2>
 
-            {/* Company Name */}
             <div>
               <label className="block text-sm text-gray-500 mb-1">
                 Company Name
@@ -97,7 +99,6 @@ export default function SettingsLayout() {
               />
             </div>
 
-            {/* Initial */}
             <div>
               <label className="block text-sm text-gray-500 mb-1">
                 Initial
@@ -112,7 +113,6 @@ export default function SettingsLayout() {
               />
             </div>
 
-            {/* Save Button */}
             <div className="pt-2 flex justify-end">
               <button
                 onClick={handleSave}
@@ -142,7 +142,9 @@ export default function SettingsLayout() {
               <h3 className="text-lg font-semibold text-gray-800">Products</h3>
               <AddProductModal />
             </div>
-            <div className="overflow-x-auto border border-gray-100 rounded-lg">
+
+            {/* Desktop Table */}
+            <div className="hidden sm:block overflow-x-auto border border-gray-100 rounded-lg">
               <table className="w-full text-sm text-gray-700">
                 <thead className="bg-gray-50 text-gray-600">
                   <tr>
@@ -191,6 +193,35 @@ export default function SettingsLayout() {
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile Cards */}
+            <div className="sm:hidden flex flex-col gap-3">
+              {products.map((p) => (
+                <div
+                  key={p.$id}
+                  className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm flex justify-between items-center"
+                >
+                  <div>
+                    <p className="font-semibold text-gray-800">
+                      {p.productName}
+                    </p>
+                    <p className="text-xs text-gray-500">{p.category}</p>
+                    <p className="text-sm text-gray-600">
+                      ₱{p.price} × {p.stockQuantity} ={" "}
+                      <span className="font-medium">
+                        ₱{p.price * p.stockQuantity}
+                      </span>
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => removeProduct(p.$id)}
+                    className="btn btn-xs btn-error"
+                  >
+                    Delete
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
@@ -201,7 +232,9 @@ export default function SettingsLayout() {
               <h3 className="text-lg font-semibold text-gray-800">Bays</h3>
               <AddBayModal />
             </div>
-            <div className="overflow-x-auto border border-gray-100 rounded-lg">
+
+            {/* Desktop */}
+            <div className="hidden sm:block overflow-x-auto border border-gray-100 rounded-lg">
               <table className="w-full text-sm text-gray-700">
                 <thead className="bg-gray-50 text-gray-600">
                   <tr>
@@ -211,38 +244,50 @@ export default function SettingsLayout() {
                   </tr>
                 </thead>
                 <tbody>
-                  {bays.length > 0 ? (
-                    bays.map((b) => (
-                      <tr
-                        key={b.$id}
-                        className="border-t hover:bg-gray-50 transition"
-                      >
-                        <td className="px-4 py-2">{b.bayName}</td>
-                        <td className="px-4 py-2">
-                          {new Date(b.$createdAt).toLocaleDateString()}
-                        </td>
-                        <td className="px-4 py-2 text-right">
-                          <button
-                            onClick={() => removeBay(b.$id)}
-                            className="text-xs bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md transition"
-                          >
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td
-                        colSpan={3}
-                        className="text-center text-gray-400 py-4"
-                      >
-                        No bays yet.
+                  {bays.map((b) => (
+                    <tr
+                      key={b.$id}
+                      className="border-t hover:bg-gray-50 transition"
+                    >
+                      <td className="px-4 py-2">{b.bayName}</td>
+                      <td className="px-4 py-2">
+                        {new Date(b.$createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-4 py-2 text-right">
+                        <button
+                          onClick={() => removeBay(b.$id)}
+                          className="text-xs bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md transition"
+                        >
+                          Delete
+                        </button>
                       </td>
                     </tr>
-                  )}
+                  ))}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile */}
+            <div className="sm:hidden flex flex-col gap-3">
+              {bays.map((b) => (
+                <div
+                  key={b.$id}
+                  className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm flex justify-between items-center"
+                >
+                  <div>
+                    <p className="font-semibold text-gray-800">{b.bayName}</p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(b.$createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => removeBay(b.$id)}
+                    className="btn btn-xs btn-error"
+                  >
+                    Delete
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
         )}
@@ -250,13 +295,17 @@ export default function SettingsLayout() {
         {/* SERVICES */}
         {activeTab === "services" && (
           <div className="space-y-5">
-            <h3 className="text-lg font-semibold text-gray-800">Services</h3>
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-gray-800">Services</h3>
+              <AddServiceModal />
+            </div>
             <div className="overflow-x-auto border border-gray-100 rounded-lg">
               <table className="w-full text-sm text-gray-700">
                 <thead className="bg-gray-50 text-gray-600">
                   <tr>
                     <th className="px-4 py-2 text-left">Service Name</th>
                     <th className="px-4 py-2 text-left">Price</th>
+                    <th className="px-4 py-2 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -268,12 +317,38 @@ export default function SettingsLayout() {
                       >
                         <td className="px-4 py-2">{s.serviceName}</td>
                         <td className="px-4 py-2">₱{s.servicePrice}</td>
+                        <td className="px-4 py-2 text-right">
+                          <button
+                            onClick={async () => {
+                              if (confirm(`Delete "${s.serviceName}"?`)) {
+                                try {
+                                  await databases.deleteDocument(
+                                    process.env.NEXT_PUBLIC_DATABASE_ID,
+                                    "services",
+                                    s.$id
+                                  );
+                                  toast.success("🗑️ Deleted successfully");
+                                  fetchServices();
+                                } catch (error) {
+                                  console.error(
+                                    "Error deleting service:",
+                                    error
+                                  );
+                                  toast.error("Failed to delete service");
+                                }
+                              }
+                            }}
+                            className="text-xs bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md transition"
+                          >
+                            Delete
+                          </button>
+                        </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
                       <td
-                        colSpan={2}
+                        colSpan={3}
                         className="text-center text-gray-400 py-4"
                       >
                         No services yet.
@@ -289,7 +364,10 @@ export default function SettingsLayout() {
         {/* EMPLOYEES */}
         {activeTab === "employees" && (
           <div className="space-y-5">
-            <h3 className="text-lg font-semibold text-gray-800">Employees</h3>
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-gray-800">Employees</h3>
+              <AddEmployeeModal />
+            </div>
             <EmployeeList />
           </div>
         )}
