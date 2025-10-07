@@ -48,7 +48,7 @@ export default function Layout() {
               <Menu size={20} />
             </button>
             <div className="md:hidden font-bold text-lg">
-              {businessName + "test" || "Company Name"}
+              {businessName || "Company Name"}
             </div>
           </div>
 
