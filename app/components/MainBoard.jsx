@@ -22,6 +22,7 @@ import AddExpenseModal from "./Helpers/AddExpenseModal";
 import TransactionsReports from "./SalesReportComponents/TransactionsReports";
 import SalesLayout from "./SalesReportComponents/SalesLayout";
 import SettingsLayout from "./SettingsComponents/SettingsLayout";
+import ProductsLayout from "./ProductsComponent/ProductsLayout";
 
 export default function Layout() {
   const { activeTab, openSidebar } = useUIStore();
@@ -125,7 +126,7 @@ export default function Layout() {
           )}
           {activeTab === "products" && (
             <div className="text-xl font-semibold flex items-center">
-              <ShoppingCart className="mr-2" /> Products Content
+              <ProductsLayout />
             </div>
           )}
           {activeTab === "sales" && <SalesLayout />}

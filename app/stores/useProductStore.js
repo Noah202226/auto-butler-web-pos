@@ -19,13 +19,13 @@ export const useProductStore = create((set, get) => ({
     }
   },
 
-  addProduct: async (name, price) => {
+  addProduct: async (newProduct) => {
     try {
       const doc = await databases.createDocument(
         DATABASE_ID,
         PRODUCTS_COLLECTION_ID,
         ID.unique(),
-        { name, price }
+        newProduct
       );
       set((state) => ({ products: [...state.products, doc] }));
     } catch (err) {

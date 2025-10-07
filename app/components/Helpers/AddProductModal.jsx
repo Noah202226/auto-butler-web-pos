@@ -1,18 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { databases, ID } from "../../lib/appwrite"; // adjust path if different
-import toast from "react-hot-toast";
-import { useProductStore } from "@/app/stores/useProductStore";
+import { useProductStore } from "../../stores/useProductStore";
 
-const DATABASE_ID = process.env.NEXT_PUBLIC_DATABASE_ID;
-const PRODUCTS_COLLECTION_ID = "products"; // update if you used another ID
-
-export default function AddProductModal({ onSuccess }) {
-  const { fetchProducts } = useProductStore();
-
+export default function AddProductModal() {
+  const { addProduct } = useProductStore();
+  const [isOpen, setIsOpen] = useState(false);
   const [form, setForm] = useState({
-    productId: "",
     productName: "",
     category: "",
     price: "",
@@ -21,149 +15,120 @@ export default function AddProductModal({ onSuccess }) {
     description: "",
   });
 
-  const [loading, setLoading] = useState(false);
-
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
   };
 
-  const handleSubmit = async () => {
-    setLoading(true);
-    try {
-      await databases.createDocument(
-        DATABASE_ID,
-        PRODUCTS_COLLECTION_ID,
-        ID.unique(),
-        {
-          productId: parseInt(form.productId),
-          productName: form.productName,
-          category: form.category,
-          price: parseFloat(form.price),
-          stockQuantity: parseInt(form.stockQuantity, 10),
-          supplierName: form.supplierName,
-          description: form.description,
-        }
-      );
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-      if (onSuccess) {
-        onSuccess();
-      }
+    await addProduct({
+      ...form,
+      price: Number(form.price),
+      stockQuantity: Number(form.stockQuantity),
+    });
 
-      // reset form
-      setForm({
-        productId: "",
-        productName: "",
-        category: "",
-        price: "",
-        stockQuantity: "",
-        supplierName: "",
-        description: "",
-      });
-
-      document.getElementById("add_product_modal").close();
-      toast.success("New Product added");
-      fetchProducts();
-    } catch (error) {
-      console.error("Error adding product:", error);
-      alert("Failed to add product");
-    } finally {
-      setLoading(false);
-    }
+    setForm({
+      productName: "",
+      category: "",
+      price: "",
+      stockQuantity: "",
+      supplierName: "",
+      description: "",
+    });
+    setIsOpen(false);
   };
 
   return (
-    <div>
-      {/* Open Modal Button */}
-      <button
-        className="btn btn-primary"
-        onClick={() => document.getElementById("add_product_modal").showModal()}
-      >
-        + Add Product
+    <>
+      {/* Open Button */}
+      <button className="btn btn-primary mb-4" onClick={() => setIsOpen(true)}>
+        ➕ Add Product
       </button>
 
       {/* Modal */}
-      <dialog id="add_product_modal" className="modal">
-        <div className="modal-box max-w-lg">
-          <h3 className="font-bold text-lg mb-4">Add New Product</h3>
+      {isOpen && (
+        <dialog open className="modal">
+          <div className="modal-box w-11/12 max-w-2xl">
+            <h3 className="font-bold text-lg mb-4">Add New Product</h3>
 
-          <div className="space-y-3">
-            <input
-              type="number"
-              name="productId"
-              placeholder="Product ID"
-              className="input input-bordered w-full"
-              value={form.productId}
-              onChange={handleChange}
-            />
-            <input
-              type="text"
-              name="productName"
-              placeholder="Product Name"
-              className="input input-bordered w-full"
-              value={form.productName}
-              onChange={handleChange}
-            />
-            <input
-              type="text"
-              name="category"
-              placeholder="Category"
-              className="input input-bordered w-full"
-              value={form.category}
-              onChange={handleChange}
-            />
-            <input
-              type="number"
-              step="0.01"
-              name="price"
-              placeholder="Price (₱)"
-              className="input input-bordered w-full"
-              value={form.price}
-              onChange={handleChange}
-            />
-            <input
-              type="number"
-              name="stockQuantity"
-              placeholder="Stock Quantity"
-              className="input input-bordered w-full"
-              value={form.stockQuantity}
-              onChange={handleChange}
-            />
-            <input
-              type="text"
-              name="supplierName"
-              placeholder="Supplier Name"
-              className="input input-bordered w-full"
-              value={form.supplierName}
-              onChange={handleChange}
-            />
-            <textarea
-              name="description"
-              placeholder="Description"
-              className="textarea textarea-bordered w-full"
-              value={form.description}
-              onChange={handleChange}
-            />
-          </div>
+            <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
+              <input
+                type="text"
+                name="productName"
+                placeholder="Product Name"
+                className="input input-bordered w-full"
+                value={form.productName}
+                onChange={handleChange}
+                required
+              />
 
-          <div className="modal-action">
-            <button
-              className="btn"
-              onClick={() =>
-                document.getElementById("add_product_modal").close()
-              }
-            >
-              Cancel
-            </button>
-            <button
-              className={`btn btn-success ${loading ? "loading" : ""}`}
-              onClick={handleSubmit}
-              disabled={loading}
-            >
-              {loading ? "Saving..." : "Save"}
-            </button>
+              <input
+                type="text"
+                name="category"
+                placeholder="Category"
+                className="input input-bordered w-full"
+                value={form.category}
+                onChange={handleChange}
+                required
+              />
+
+              <input
+                type="number"
+                name="price"
+                placeholder="Price"
+                className="input input-bordered w-full"
+                value={form.price}
+                onChange={handleChange}
+                required
+              />
+
+              <input
+                type="number"
+                name="stockQuantity"
+                placeholder="Stock Quantity"
+                className="input input-bordered w-full"
+                value={form.stockQuantity}
+                onChange={handleChange}
+                required
+              />
+
+              <input
+                type="text"
+                name="supplierName"
+                placeholder="Supplier Name"
+                className="input input-bordered w-full col-span-2"
+                value={form.supplierName}
+                onChange={handleChange}
+              />
+
+              <textarea
+                name="description"
+                placeholder="Description"
+                className="textarea textarea-bordered w-full col-span-2"
+                value={form.description}
+                onChange={handleChange}
+              ></textarea>
+
+              <div className="modal-action col-span-2">
+                <button type="submit" className="btn btn-success">
+                  Save
+                </button>
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
           </div>
-        </div>
-      </dialog>
-    </div>
+        </dialog>
+      )}
+    </>
   );
 }

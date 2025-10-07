@@ -8,6 +8,7 @@ import AddProductModal from "../Helpers/AddProductModal";
 import AddBayModal from "../Helpers/AddBayModal";
 import { useServiceStore } from "@/app/stores/useServiceStore";
 import { useEmployeeStore } from "@/app/stores/useEmployeeStore";
+import EmployeeList from "./EmployeeList";
 
 export default function SettingsLayout() {
   const [activeTab, setActiveTab] = useState("personalization");
@@ -324,47 +325,7 @@ export default function SettingsLayout() {
 
             {/* <AddBayModal /> */}
 
-            {/* Bay list */}
-            <div className="mt-4 border rounded-lg overflow-hidden">
-              <table className="w-full text-sm text-gray-600">
-                <thead className="bg-gray-100 text-gray-800">
-                  <tr>
-                    <th className="px-4 py-2 text-left">Employee Name</th>
-                    <th className="px-4 py-2 text-left">Date hired</th>
-                    <th className="px-4 py-2 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {employees.length > 0 ? (
-                    employees.map((b) => (
-                      <tr key={b.$id} className="border-t">
-                        <td className="px-4 py-2">{b.name}</td>
-                        <td className="px-4 py-2">
-                          {new Date(b.$createdAt).toLocaleDateString()}
-                        </td>
-                        <td className="px-4 py-2 text-right">
-                          <button
-                            onClick={() => removeBay(b.$id)}
-                            className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-xs"
-                          >
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td
-                        colSpan={2}
-                        className="text-center text-gray-500 py-4"
-                      >
-                        No Services configured yet.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+            <EmployeeList />
           </div>
         )}
       </div>
